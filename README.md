@@ -24,7 +24,7 @@ Proyecto Integrador – IES Cibertec. Tablero en Jira: proyecto SCRUM.
 | Alfredo Fara | @YakFar | Scrum Master | Diagramas, integración continua, informes |
 | Gustavo Huaman | @Gussoft | Desarrollo | API Java y reportes |
 | Said Oyola | (pendiente) | Desarrollo | Base de datos y pruebas |
-| Vladimir Angelino | (pendiente) | Desarrollo | Asistente watsonx y documentación |
+| Vladimir Angelino | @DeiosZ | Desarrollo | Asistente watsonx y documentación |
 
 El archivo `.github/CODEOWNERS` asigna un responsable a cada carpeta.
 
