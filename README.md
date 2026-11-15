@@ -16,4 +16,22 @@ Proyecto Integrador – IES Cibertec. Tablero en Jira: proyecto SCRUM.
 | `docs/informes-sprint/` | Informes de avance de cada sprint |
 | `.github/workflows/` | Integración continua con GitHub Actions |
 
-Usen la clave de Jira en ramas y commits, por ejemplo: `SCRUM-36-crear-bd`.
+## Equipo y roles
+
+| Integrante | GitHub | Rol en Scrum | Área principal |
+|---|---|---|---|
+| Wilder Tudela | @dwisardev | Líder y Product Owner | Panel .NET, Product Backlog |
+| Alfredo Fara | @YakFar | Scrum Master | Diagramas, integración continua, informes |
+| Gustavo Huaman | @Gussoft | Desarrollo | API Java y reportes |
+| Said Oyola | (pendiente) | Desarrollo | Base de datos y pruebas |
+| Vladimir Angelino | (pendiente) | Desarrollo | Asistente watsonx y documentación |
+
+El archivo `.github/CODEOWNERS` asigna un responsable a cada carpeta.
+
+## Cómo trabajar con Jira
+
+El repositorio está conectado a Jira. Pongan la clave de la tarea en la rama, el commit
+o el pull request y aparecerá en la tarea, por ejemplo:
+
+- Rama: `SCRUM-36-crear-bd`
+- Commit: `SCRUM-36 crea tablas de interesados`

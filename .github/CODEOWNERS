@@ -1,0 +1,9 @@
+# Responsables por carpeta – Equipo ERROR 404
+# GitHub pide la revisión del responsable cuando un pull request toca su carpeta.
+# Said (base de datos) y Vladimir (asistente) se agregan cuando tengamos sus usuarios.
+
+*                     @dwisardev
+/panel/               @dwisardev
+/api/                 @Gussoft
+/docs/diagramas/      @YakFar
+/.github/workflows/   @YakFar
