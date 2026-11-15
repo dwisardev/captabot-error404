@@ -23,7 +23,7 @@ Proyecto Integrador – IES Cibertec. Tablero en Jira: proyecto SCRUM.
 | Wilder Tudela | @dwisardev | Líder y Product Owner | Panel .NET, Product Backlog |
 | Alfredo Fara | @YakFar | Scrum Master | Diagramas, integración continua, informes |
 | Gustavo Huaman | @Gussoft | Desarrollo | API Java y reportes |
-| Said Oyola | (pendiente) | Desarrollo | Base de datos y pruebas |
+| Said Oyola | @said5596 | Desarrollo | Base de datos y pruebas |
 | Vladimir Angelino | @DeiosZ | Desarrollo | Asistente watsonx y documentación |
 
 El archivo `.github/CODEOWNERS` asigna un responsable a cada carpeta.
