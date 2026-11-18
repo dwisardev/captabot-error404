@@ -24,8 +24,8 @@ Comprobar que CaptaBot cumple los criterios de aceptación de las 12 historias d
 | Unitarias de la API | JUnit 5, Mockito, AssertJ, MockMvc | Calificación, usuarios, seguimiento, reportes y controladores | En cada push (GitHub Actions) y con `mvn test` |
 | Unitarias del panel | xUnit, WebApplicationFactory | Cliente de la API, controladores, exportación a Excel y páginas protegidas | En cada push y con `dotnet test` |
 | Base de datos | psql sobre PostgreSQL 16 limpio | Que los tres scripts se ejecuten sin errores y carguen 10 prospectos | En cada push |
-| Integración de la API | Postman y newman | 30 solicitudes con 41 verificaciones sobre la API real y la base de datos | En cada push y desde Postman |
-| Punta a punta | curl en GitHub Actions | BD + API + panel juntos: registro, inicio de sesión real, lista, reportes, Excel y usuarios | En cada push |
+| Integración de la API | Postman y newman | 41 solicitudes con 55 verificaciones sobre la API real y la base de datos | En cada push y desde Postman |
+| Punta a punta | curl en GitHub Actions | BD + API + panel juntos: conversación del chat, inicio de sesión real, lista, reportes, Excel y usuarios | En cada push |
 | Contenedores | Docker Compose | Que el sistema completo levante con un solo comando | Cuando cambian Docker o las dependencias |
 | Asistente | JUnit, curl en el CI y navegador | Conversaciones de los casos A01 a A08 | En cada push; A07 y A08 a mano |
 | Aceptación | Demo con el Product Owner | Criterios de aceptación de cada historia | Al cierre de cada sprint |
@@ -100,13 +100,13 @@ Cada error encontrado se registra en Jira como **Error** con: pasos para reprodu
 esperado, resultado obtenido y captura. La corrección se sube en un commit con la clave del error
 (por ejemplo `SCRUM-60 Corrige el filtro por fechas`), para que quede enlazada en Jira.
 
-## 8. Resultados al 17 de noviembre de 2026
+## 8. Resultados al 18 de noviembre de 2026
 
 | Prueba | Resultado |
 |---|---|
-| JUnit (API) | 63 pruebas, 0 fallos |
+| JUnit (API) | 102 pruebas, 0 fallos |
 | xUnit (panel) | 50 pruebas, 0 fallos |
-| Postman / newman | 30 solicitudes, 41 verificaciones, 0 fallos |
+| Postman / newman | 41 solicitudes, 55 verificaciones, 0 fallos |
 | Punta a punta (BD + API + panel) | Correcta |
 | Docker Compose | Correcto |
 | Asistente (A01 a A06, A08) | Automatizados con JUnit y en el CI |
