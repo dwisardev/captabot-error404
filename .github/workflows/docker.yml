@@ -23,6 +23,8 @@ jobs:
   compose:
     name: Docker Compose (BD + API + panel)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # para publicar las capturas en la rama «capturas»
     steps:
       - uses: actions/checkout@v5
 
@@ -61,6 +63,18 @@ jobs:
           name: capturas
           path: /tmp/capturas
           retention-days: 30
+
+      - name: Publicar las capturas en la rama «capturas»
+        if: github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd /tmp/capturas
+          git init -q -b capturas
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "Capturas del sistema (${GITHUB_SHA::7})"
+          git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" capturas
 
       - name: Mostrar los logs
         if: always()

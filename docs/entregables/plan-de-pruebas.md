@@ -27,7 +27,7 @@ Comprobar que CaptaBot cumple los criterios de aceptación de las 12 historias d
 | Integración de la API | Postman y newman | 42 solicitudes con 56 verificaciones sobre la API real y la base de datos | En cada push y desde Postman |
 | Punta a punta | curl en GitHub Actions | BD + API + panel juntos: conversación del chat, inicio de sesión real, lista, reportes, Excel y usuarios | En cada push |
 | Contenedores | Docker Compose | Que el sistema completo levante con un solo comando | Cuando cambian Docker o las dependencias |
-| Asistente | JUnit, curl en el CI y navegador | Conversaciones de los casos A01 a A10 | En cada push; A07 y A08 a mano |
+| Asistente | JUnit, curl en el CI y navegador | Conversaciones de los casos A01 a A11 | En cada push; A07 y A08 a mano |
 | Aceptación | Demo con el Product Owner | Criterios de aceptación de cada historia | Al cierre de cada sprint |
 
 ## 4. Entorno de pruebas
@@ -52,7 +52,7 @@ Estado: **Auto** = automatizado y en verde en el CI · **Manual** = se prueba a 
 | HU03 | P03 | S/ 100 y urgencia baja | 15 puntos, FRIO | Auto |
 | HU03 | P04 | Montos en el borde de cada tramo (S/ 4999.99, 5000, 499.99, 500) y 70 puntos exactos | Se aplica el tramo correcto; 70 puntos ya es CALIENTE | Auto |
 | HU04 | A04 | Completar la conversación de captación | Pide consentimiento, nombre, celular, servicio, presupuesto y urgencia; muestra un resumen, pide confirmación y recién entonces registra al prospecto | Auto |
-| HU04 | A10 | En el resumen, elegir «Corregir datos» o responder «No» | Con «Corregir datos» vuelve a pedir el nombre; con «No» vuelve al menú; en ambos casos no guarda nada | Auto |
+| HU04 | A11 | En el resumen, elegir «Corregir datos» o responder «No» | Con «Corregir datos» vuelve a pedir el nombre; con «No» vuelve al menú; en ambos casos no guarda nada | Auto |
 | HU04 | A05 | Rechazar el consentimiento | Se despide sin guardar datos | Auto |
 | HU05 | P05 | Registro válido desde la extensión | 201, mensaje con el primer nombre, guardado en etapa NUEVO | Auto |
 | HU05 | P06 | Teléfono con menos de 9 dígitos | 400 con el detalle del campo | Auto |
@@ -112,6 +112,6 @@ esperado, resultado obtenido y captura. La corrección se sube en un commit con 
 | Postman / newman | 42 solicitudes, 56 verificaciones, 0 fallos |
 | Punta a punta (BD + API + panel) | Correcta |
 | Docker Compose | Correcto |
-| Asistente (A01 a A06, A08 a A10) | Automatizados con JUnit y en el CI |
+| Asistente (A01 a A06, A08 a A11) | Automatizados con JUnit y en el CI |
 | A07 con Azure AI Language | Pendiente: crear el recurso gratuito en Azure |
 | A10 con el bot real de Telegram | Pendiente: crear el bot con @BotFather |
