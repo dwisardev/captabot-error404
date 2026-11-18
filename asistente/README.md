@@ -1,85 +1,125 @@
-# Asistente virtual – watsonx Assistant
+# Asistente virtual – chat de CaptaBot + Azure AI Language
 
-Guía para configurar el asistente de CaptaBot en IBM watsonx Assistant y conectarlo
-con la API. Responsable: Vladimir Angelino (@DeiosZ). Tareas en Jira: SCRUM-12,
-SCRUM-13 y SCRUM-15.
+Responsable: Vladimir Angelino (@DeiosZ). Historias: HU01, HU02, HU04 y HU05 (SCRUM-12, 13, 15 y 16).
+
+El asistente es gratuito de punta a punta:
+
+- **El chat** aparece en la página web de la PYME, que sirve la propia API en `http://localhost:8080`. La
+  conversación está programada en la API (`api/.../chat/ConversacionService.java`) y sigue el diagrama
+  `docs/diagramas/flujo-asistente.png`. Cuando el cliente deja sus datos, la API registra y califica al
+  prospecto, y este aparece en el panel.
+- **Las preguntas frecuentes** las responde **Azure AI Language** (función *custom question answering*,
+  plan gratuito F0). Si Azure no está configurado o no responde, el chat usa su buscador local con las
+  mismas respuestas, así la demo nunca se cae.
 
 | Archivo | Para qué sirve |
 |---|---|
-| `preguntas-frecuentes.md` | Acciones de preguntas frecuentes con frases de ejemplo y respuestas |
-| `extension-openapi.json` | Especificación OpenAPI para crear la extensión personalizada que llama a la API |
-| `web/index.html` | Página de demo con el chat web insertado |
-| `captabot-asistente.json` | (Pendiente) Exportación del asistente; se sube cuando esté configurado |
+| `preguntas-frecuentes.md` | Las 7 respuestas y sus frases de ejemplo |
+| `azure/preguntas-frecuentes.tsv` | Las mismas preguntas en el formato que se carga en Azure |
+| `azure/cargar-preguntas.py` | Crea, carga y publica el proyecto de preguntas en Azure |
+| `ibm-watsonx/` | La propuesta anterior con IBM watsonx Assistant, por si el curso la exige |
 
-## 1. Crear la instancia
-
-1. Crear una cuenta en IBM Cloud (cloud.ibm.com) y buscar **watsonx Assistant** en el catálogo.
-2. Elegir el plan **Lite** (gratuito) y la región más cercana, por ejemplo Dallas (`us-south`).
-3. Abrir la herramienta (**Launch watsonx Assistant**) y crear un asistente llamado **CaptaBot**, en español.
-
-> En el plan Lite, IBM elimina la instancia si pasa 30 días sin uso. Conviene probar el
-> asistente al menos una vez por semana y exportarlo a este repositorio (paso 6).
-
-## 2. Acciones de preguntas frecuentes
-
-Crear una acción por cada fila de `preguntas-frecuentes.md`, copiando las frases de
-ejemplo y la respuesta. Al final de cada respuesta, agregar un paso que pregunte si
-desea que un asesor lo contacte y, si responde que sí, ir a **Registrar interés**.
-
-## 3. Acción "Registrar interés" (captación de datos)
-
-Frases de ejemplo: *quiero una cotización, quiero contratar, me interesa, quiero que me
-llamen, necesito un presupuesto*.
-
-| Paso | El asistente dice | Tipo de respuesta | Variable |
-|---|---|---|---|
-| 1 | Para que un asesor te contacte, guardaremos tu nombre y teléfono. ¿Estás de acuerdo? | Sí / No | Si es **No**, despedirse y terminar |
-| 2 | ¿Cuál es tu nombre? | Texto libre | `nombre` |
-| 3 | ¿A qué número de celular te podemos llamar? (9 dígitos) | Texto libre | `telefono` |
-| 4 | ¿Qué servicio te interesa? | Opciones: Diseño web, Marketing digital, Soporte técnico, Otro | `servicio` |
-| 5 | ¿Cuál es tu presupuesto aproximado en soles? | Moneda (PEN) o número | `presupuesto` |
-| 6 | ¿Qué tan pronto lo necesitas? Alta: esta semana · Media: este mes · Baja: solo estoy averiguando | Opciones: Alta, Media, Baja | `urgencia` |
-| 7 | Llamar a la extensión **CaptaBot API → Registrar prospecto** con las cinco variables | Extensión | — |
-| 8 | Mostrar el campo `mensaje` de la respuesta de la extensión | — | — |
-
-La API valida los datos: si el teléfono no tiene 9 dígitos responde con error 400. En
-ese caso, el paso 8 debe tener una condición: si la extensión no respondió bien, decir
-*"No pudimos registrar tus datos. Revisa que tu número tenga 9 dígitos e inténtalo
-otra vez"* y volver al paso 3.
-
-La API acepta la urgencia en mayúsculas o minúsculas, con o sin tilde (`Alta`, `ALTA`, `alta`).
-
-## 4. Conectar la extensión con la API
-
-1. La API debe estar en una URL pública con **HTTPS**. Para la demo se puede exponer la
-   API local con un túnel, por ejemplo `cloudflared tunnel --url http://localhost:8080`
-   o `ngrok http 8080`, y copiar la URL que muestra.
-2. En `extension-openapi.json`, reemplazar `https://REEMPLAZAR-CON-LA-URL-PUBLICA-DE-LA-API`
-   por esa URL (sin `/` al final).
-3. En watsonx Assistant: **Integrations → Build custom extension**, subir el archivo,
-   nombrarla **CaptaBot API** y agregarla al asistente.
-4. En la autenticación de la extensión elegir **API key** y escribir el mismo valor que la
-   variable `CAPTABOT_API_KEY` con la que se inició la API.
-5. Probar en **Preview**: completar la acción y revisar que el prospecto aparezca en
-   `GET /api/prospectos`.
-
-La API se ejecuta como explica `api/README.md`. Ejemplo para la demo:
+## 1. Probar el chat (sin Azure)
 
 ```bash
-export CAPTABOT_API_KEY=una-clave-larga-y-secreta
-cd api && mvn spring-boot:run
+docker compose up --build
 ```
 
-## 5. Publicar el chat web
+Abran `http://localhost:8080` y hagan clic en el botón azul de la esquina inferior derecha. Prueben
+«¿Cuánto cuesta?», «Quiero cotizar» y completen los datos; el prospecto aparece en el panel
+(`http://localhost:5080`). En `http://localhost:8080/api/health` dice `"preguntasFrecuentes": "local"`.
 
-1. **Integrations → Web chat**, ajustar el color, el nombre (**CaptaBot**) y el mensaje
-   de bienvenida.
-2. En la pestaña **Embed** copiar `integrationID`, `region` y `serviceInstanceID`.
-3. Pegarlos en `web/index.html` y abrir la página en el navegador.
+## 2. Conectar Azure AI Language (gratis)
 
-## 6. Exportar el asistente al repositorio
+### 2.1 Activar Azure for Students
 
-Cada vez que cambien el asistente: **Actions → Global settings → Upload/Download →
-Download**, guardar el archivo como `asistente/captabot-asistente.json` y subirlo con un
-commit que incluya la clave de la tarea, por ejemplo
-`SCRUM-12 Actualiza las acciones de preguntas frecuentes`.
+En [azure.microsoft.com/free/students](https://azure.microsoft.com/free/students) inicien sesión y
+verifiquen que son estudiantes con su correo de Cibertec. No pide tarjeta, da USD 100 de crédito por
+12 meses y se renueva cada año mientras sean estudiantes. Lo que usamos aquí entra en planes gratuitos
+y no consume ese crédito.
+
+### 2.2 Crear el recurso de Language
+
+En el [portal de Azure](https://portal.azure.com): **Crear un recurso** → busquen **Language** (Azure AI
+Language / Language service) → **Crear**. En las funciones adicionales elijan **Custom question answering**
+y continúen. Completen:
+
+| Campo | Valor |
+|---|---|
+| Suscripción | Azure for Students |
+| Grupo de recursos | Nuevo: `captabot` |
+| Región | East US, East US 2 o la que permita su suscripción |
+| Nombre | Uno único, por ejemplo `captabot-lenguaje-404` |
+| Plan de tarifa | **Free F0** |
+| Ubicación de Azure Search | La misma región |
+| Plan de Azure Search | **Free F** |
+
+Acepten el aviso de IA responsable y elijan **Revisar y crear** → **Crear**. Si la región da error, prueben
+otra: algunas suscripciones de estudiante solo permiten ciertas regiones. Cada suscripción admite un solo
+recurso Free F0 y un solo Azure Search gratuito.
+
+### 2.3 Copiar la clave y el endpoint
+
+En el recurso creado: **Claves y punto de conexión**. En la carpeta del repositorio, copien `.env.ejemplo`
+como `.env` y completen:
+
+```bash
+AZURE_LANGUAGE_ENDPOINT=https://captabot-lenguaje-404.cognitiveservices.azure.com/
+AZURE_LANGUAGE_KEY=la-clave-1-del-portal
+AZURE_LANGUAGE_PROYECTO=captabot-faq
+```
+
+El archivo `.env` no se sube a GitHub (está en `.gitignore`). No compartan la clave por chat ni en el informe.
+
+### 2.4 Cargar las preguntas
+
+```bash
+python3 asistente/azure/cargar-preguntas.py
+```
+
+El script crea el proyecto `captabot-faq` en español, carga las 7 respuestas con sus 35 formas de
+preguntar, lo publica y hace una pregunta de prueba. Con `--simular` muestra lo que enviaría sin llamar a
+Azure; con `--reiniciar` borra el proyecto y lo vuelve a crear (úsenlo si cambian las respuestas).
+
+### 2.5 Reiniciar y comprobar
+
+```bash
+docker compose up --build
+```
+
+`http://localhost:8080/api/health` debe decir `"preguntasFrecuentes": "azure-ai-language"`. Ahora Azure
+entiende también preguntas escritas de otra forma, por ejemplo «¿abren los domingos?».
+
+### Límites del plan gratuito
+
+El plan F0 de Language incluye 5 000 registros de texto al mes compartidos entre sus funciones. Si se
+alcanza el límite, Azure deja de responder hasta el mes siguiente y **no cobra**; mientras tanto el chat
+usa el buscador local.
+
+## 3. Cambiar las respuestas
+
+Las respuestas están en tres lugares que deben coincidir: `preguntas-frecuentes.md`,
+`azure/preguntas-frecuentes.tsv` y `api/src/main/java/pe/captabot/api/chat/PreguntasLocales.java`.
+Después de cambiarlas, ejecuten `cargar-preguntas.py --reiniciar`.
+
+## 4. Insertar el chat en otra página web
+
+```html
+<link rel="stylesheet" href="https://SU-API/chat/captabot-chat.css">
+<script src="https://SU-API/chat/captabot-chat.js" data-api="https://SU-API"></script>
+```
+
+Y agreguen la dirección de esa página en la variable `CAPTABOT_CHAT_ORIGENES` de la API.
+
+## 5. Cómo responde el chat
+
+| El cliente escribe | El chat |
+|---|---|
+| Una pregunta frecuente | Responde y ofrece que un asesor lo contacte |
+| «Quiero cotizar», «que me llame un asesor» | Pide consentimiento, nombre, celular, servicio, presupuesto y urgencia |
+| Un celular sin 9 dígitos o un monto que no entiende | Explica el formato y lo vuelve a pedir |
+| Algo que no entiende | Dice qué temas puede atender |
+| «menú» | Vuelve al inicio |
+
+El chat es público (no pide la clave X-API-Key) porque lo usa el navegador del cliente; solo permite
+registrar prospectos siguiendo la conversación.
