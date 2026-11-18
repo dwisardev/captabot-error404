@@ -19,6 +19,14 @@ const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 
 fs.mkdirSync(destino, { recursive: true });
 
+async function nuevaPagina(navegador) {
+    const pagina = await nuevaPagina(navegador);
+    const cdp = await pagina.createCDPSession();
+    await cdp.send("Emulation.setLocaleOverride", { locale: "es-PE" });
+    await pagina.setExtraHTTPHeaders({ "Accept-Language": "es-PE,es;q=0.9" });
+    return pagina;
+}
+
 async function guardar(pagina, nombre, completa = false) {
     await espera(400);
     await pagina.screenshot({ path: path.join(destino, nombre), fullPage: completa });
@@ -53,11 +61,13 @@ async function enviarFormulario(pagina, boton) {
     const navegador = await puppeteer.launch({
         executablePath: CHROME,
         args: ["--no-sandbox", "--lang=es-PE"],
+        // Idioma del navegador en español (Perú): fechas como dd/mm/aaaa
+        env: { ...process.env, LANG: "es_PE.UTF-8", LANGUAGE: "es_PE:es" },
         defaultViewport: { width: 1366, height: 900 },
     });
     try {
         // ------------------------------------------------ chat en la página de la PYME
-        const web = await navegador.newPage();
+        const web = await nuevaPagina(navegador);
         await web.goto(WEB, { waitUntil: "networkidle0" });
         await guardar(web, "01-pagina-pyme.png");
 
@@ -79,7 +89,7 @@ async function enviarFormulario(pagina, boton) {
         await guardar(web, "04-chat-registrado.png");
 
         // ------------------------------------------------ chat en un celular
-        const movil = await navegador.newPage();
+        const movil = await nuevaPagina(navegador);
         await movil.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
         await movil.goto(WEB, { waitUntil: "networkidle0" });
         await movil.click(".cb-boton");
@@ -88,7 +98,7 @@ async function enviarFormulario(pagina, boton) {
         await guardar(movil, "05-chat-celular.png");
 
         // ------------------------------------------------ panel administrativo
-        const panel = await navegador.newPage();
+        const panel = await nuevaPagina(navegador);
         await panel.goto(PANEL + "/Cuenta/Login", { waitUntil: "networkidle0" });
         await guardar(panel, "06-panel-inicio-sesion.png");
 
