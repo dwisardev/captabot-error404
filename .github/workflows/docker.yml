@@ -15,6 +15,7 @@ on:
       - 'panel/**/*.csproj'
       - 'base-datos/**'
       - 'api/src/main/resources/static/**'
+      - docs/capturas/capturar.js
       - .github/workflows/docker.yml
   workflow_dispatch:
 
@@ -47,6 +48,19 @@ jobs:
           curl -fs -X POST http://localhost:8080/api/chat/mensajes -H 'Content-Type: application/json' \
             -d '{"texto":""}' | jq -e '.mensajes[0] | contains("CaptaBot")'
           echo "Docker Compose verificado"
+
+      - name: Capturar pantallas para el informe y el manual
+        run: |
+          mkdir -p /tmp/navegador && cd /tmp/navegador
+          npm init -y > /dev/null && npm i --no-save --silent puppeteer-core@24
+          NODE_PATH=/tmp/navegador/node_modules node "$GITHUB_WORKSPACE/docs/capturas/capturar.js" /tmp/capturas
+
+      - name: Guardar las capturas
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas
+          path: /tmp/capturas
+          retention-days: 30
 
       - name: Mostrar los logs
         if: always()
