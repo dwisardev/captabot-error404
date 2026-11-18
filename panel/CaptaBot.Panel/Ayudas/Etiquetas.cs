@@ -36,6 +36,15 @@ public static class Etiquetas
 
     public static string TextoRol(string? valor) => Buscar(Roles, valor);
 
+    /// <summary>Por dónde llegó el prospecto: chat de la página web o Telegram.</summary>
+    public static string TextoCanal(string? valor) => valor switch
+    {
+        "CHAT_WEB" => "Chat web",
+        "TELEGRAM" => "Telegram",
+        null or "" => "",
+        _ => valor
+    };
+
     public static bool EsEtapa(string? valor) => Etapas.Any(e => e.Valor == valor);
 
     public static bool EsCalificacion(string? valor) => Calificaciones.Any(c => c.Valor == valor);

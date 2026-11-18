@@ -22,6 +22,13 @@ public class EtiquetasTests
         Assert.Equal(clase, Etiquetas.ClaseCalificacion(valor));
     }
 
+    [Theory]
+    [InlineData("CHAT_WEB", "Chat web")]
+    [InlineData("TELEGRAM", "Telegram")]
+    [InlineData("OTRO", "OTRO")]
+    public void TextoCanal_IndicaPorDondeLlego(string valor, string esperado) =>
+        Assert.Equal(esperado, Etiquetas.TextoCanal(valor));
+
     [Fact]
     public void FechaHora_SeMuestraEnHoraDePeru()
     {

@@ -68,7 +68,10 @@ else
                 @foreach (var p in Model.Resultado.Contenido)
                 {
                     <tr>
-                        <td><a asp-action="Detalle" asp-route-id="@p.Id" class="enlace-fuerte">@p.Nombre</a></td>
+                        <td>
+                            <a asp-action="Detalle" asp-route-id="@p.Id" class="enlace-fuerte">@p.Nombre</a>
+                            <div class="sutil">@Etiquetas.TextoCanal(p.Canal)</div>
+                        </td>
                         <td><a href="tel:@p.Telefono">@p.Telefono</a></td>
                         <td>@p.ServicioInteres</td>
                         <td><span class="@Etiquetas.ClaseCalificacion(p.Calificacion)">@Etiquetas.TextoCalificacion(p.Calificacion) · @p.Puntaje</span></td>

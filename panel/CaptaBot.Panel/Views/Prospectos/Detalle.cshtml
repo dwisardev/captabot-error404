@@ -29,7 +29,7 @@
             <dt>Urgencia</dt>
             <dd>@(p.Urgencia switch { "ALTA" => "Alta", "MEDIA" => "Media", "BAJA" => "Baja", _ => p.Urgencia })</dd>
             <dt>Canal</dt>
-            <dd>@(p.Canal == "CHAT_WEB" ? "Chat de la página web" : p.Canal)</dd>
+            <dd>@Etiquetas.TextoCanal(p.Canal)</dd>
             <dt>Registrado</dt>
             <dd>@Etiquetas.FechaHora(p.CreadoEn)</dd>
         </dl>
