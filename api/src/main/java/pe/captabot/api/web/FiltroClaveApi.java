@@ -13,8 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 /**
- * Exige la cabecera X-API-Key en /api/** (salvo /api/health) cuando captabot.api-key tiene valor.
- * watsonx Assistant envía esta clave desde la extensión personalizada.
+ * Exige la cabecera X-API-Key en /api/** cuando captabot.api-key tiene valor. Quedan libres /api/health y
+ * /api/chat/**, que usa el navegador del cliente. El panel y las integraciones envían la clave.
  */
 @Component
 public class FiltroClaveApi extends OncePerRequestFilter {
@@ -32,7 +32,8 @@ public class FiltroClaveApi extends OncePerRequestFilter {
         String ruta = request.getRequestURI();
         return claveEsperada.length == 0
                 || !ruta.startsWith("/api/")
-                || ruta.equals("/api/health");
+                || ruta.equals("/api/health")
+                || ruta.startsWith("/api/chat/");
     }
 
     @Override
