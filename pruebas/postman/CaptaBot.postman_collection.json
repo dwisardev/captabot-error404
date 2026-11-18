@@ -1825,7 +1825,7 @@
           ]
         },
         {
-          "name": "Urgencia y registro",
+          "name": "Urgencia y resumen",
           "request": {
             "method": "POST",
             "header": [
@@ -1848,6 +1848,57 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"Baja: solo estoy averiguando\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Muestra el resumen y pide confirmación antes de registrar\", () => {",
+                  "    pm.expect(r.registrado).to.be.false;",
+                  "    pm.expect(r.mensajes[0]).to.include(\"Revisa tus datos\").and.to.include(\"955444333\");",
+                  "    pm.expect(r.opciones).to.eql([\"Sí, registrar\", \"Corregir datos\"]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirma y registra",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"Sí, registrar\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

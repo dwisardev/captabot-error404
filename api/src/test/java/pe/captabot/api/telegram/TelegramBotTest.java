@@ -88,6 +88,9 @@ class TelegramBotTest {
         bot.atender(texto(77, "Diseño web"));
         bot.atender(texto(77, "3000"));
         bot.atender(texto(77, "Alta: esta semana"));
+        assertThat(telegram.ultimo().texto()).contains("Revisa tus datos");
+        assertThat(telegram.ultimo().teclado().toString()).contains("Sí, registrar", "Corregir datos");
+        bot.atender(texto(77, "Sí, registrar"));
 
         ArgumentCaptor<ProspectoRequest> datos = ArgumentCaptor.forClass(ProspectoRequest.class);
         verify(prospectos).registrar(datos.capture(), eq(ConversacionService.CANAL_TELEGRAM));

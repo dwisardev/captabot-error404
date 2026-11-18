@@ -47,7 +47,13 @@ class ConversacionServiceTest {
         assertThat(chat.procesar(s, "987 654 321").opciones()).contains("Diseño web");
         chat.procesar(s, "Diseño web");
         assertThat(chat.procesar(s, "S/ 6,000").opciones()).contains("Alta: esta semana");
-        RespuestaChat fin = chat.procesar(s, "Alta: esta semana");
+        RespuestaChat resumen = chat.procesar(s, "Alta: esta semana");
+        assertThat(resumen.mensajes().get(0)).contains("Revisa tus datos", "maría quispe", "987654321",
+                "Diseño web", "S/ 6,000.00", "Alta (esta semana)");
+        assertThat(resumen.opciones()).isEqualTo(ConversacionService.CONFIRMAR);
+        assertThat(resumen.registrado()).isFalse();
+        verify(prospectos, never()).registrar(any(), any());
+        RespuestaChat fin = chat.procesar(s, "Sí, registrar");
 
         assertThat(fin.registrado()).isTrue();
         assertThat(fin.mensajes().get(0)).isEqualTo("Gracias, María. Registramos tus datos y un asesor te contactará pronto.");
@@ -58,6 +64,38 @@ class ConversacionServiceTest {
         assertThat(datos.getValue().servicioInteres()).isEqualTo("Diseño web");
         assertThat(datos.getValue().presupuesto()).isEqualByComparingTo(new BigDecimal("6000"));
         assertThat(datos.getValue().urgencia()).isEqualTo("ALTA");
+    }
+
+    @Test
+    void corregirDatosVuelveAPedirElNombreSinRegistrar() {
+        String s = llegarAlResumen();
+
+        RespuestaChat r = chat.procesar(s, "Corregir datos");
+
+        assertThat(r.mensajes().get(0)).contains("¿Cuál es tu nombre?");
+        verify(prospectos, never()).registrar(any(), any());
+        assertThat(chat.procesar(s, "Luis Rojas").mensajes().get(0)).startsWith("Gracias, Luis.");
+    }
+
+    @Test
+    void siNoConfirmaNoRegistraYVuelveAlMenu() {
+        String s = llegarAlResumen();
+
+        RespuestaChat r = chat.procesar(s, "No");
+
+        assertThat(r.mensajes().get(0)).contains("no registré tus datos");
+        assertThat(r.opciones()).isEqualTo(ConversacionService.MENU);
+        verify(prospectos, never()).registrar(any(), any());
+    }
+
+    @Test
+    void enElResumenInsisteSiLaRespuestaNoEsClara() {
+        String s = llegarAlResumen();
+
+        RespuestaChat r = chat.procesar(s, "mmm");
+
+        assertThat(r.opciones()).isEqualTo(ConversacionService.CONFIRMAR);
+        verify(prospectos, never()).registrar(any(), any());
     }
 
     @Test
@@ -164,6 +202,15 @@ class ConversacionServiceTest {
         chat.procesar(s, "Quiero cotizar");
         chat.procesar(s, "Sí");
         chat.procesar(s, "Ana");
+        return s;
+    }
+
+    private String llegarAlResumen() {
+        String s = llegarAlCelular();
+        chat.procesar(s, "912345678");
+        chat.procesar(s, "Soporte técnico");
+        chat.procesar(s, "800");
+        chat.procesar(s, "Baja: solo estoy averiguando");
         return s;
     }
 }

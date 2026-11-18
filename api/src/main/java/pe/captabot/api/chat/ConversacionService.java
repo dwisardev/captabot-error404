@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -37,6 +38,7 @@ public class ConversacionService {
     static final List<String> SI_NO = List.of("Sí", "No");
     static final List<String> SERVICIOS = List.of("Diseño web", "Marketing digital", "Soporte técnico", "Otro");
     static final List<String> URGENCIAS = List.of("Alta: esta semana", "Media: este mes", "Baja: solo estoy averiguando");
+    static final List<String> CONFIRMAR = List.of("Sí, registrar", "Corregir datos");
 
     static final String SALUDO = "¡Hola! Soy CaptaBot, el asistente virtual. Puedo resolver tus dudas sobre horarios, "
             + "ubicación, servicios, precios, formas de pago y tiempos de entrega, o ayudarte a pedir una cotización.";
@@ -95,6 +97,7 @@ public class ConversacionService {
             case SERVICIO -> enServicio(c, entrada);
             case PRESUPUESTO -> enPresupuesto(c, entrada);
             case URGENCIA -> enUrgencia(c, entrada);
+            case CONFIRMACION -> enConfirmacion(c, entrada);
         };
     }
 
@@ -208,13 +211,34 @@ public class ConversacionService {
         if (urgencia == null) {
             return responder(c, List.of("Elige una opción: Alta, Media o Baja."), URGENCIAS);
         }
+        c.urgencia = urgencia;
+        c.estado = EstadoConversacion.CONFIRMACION;
+        return responder(c, List.of(resumen(c)), CONFIRMAR);
+    }
+
+    /** HU04: antes de registrar, el cliente revisa sus datos y confirma o los corrige. */
+    private RespuestaChat enConfirmacion(Conversacion c, String entrada) {
+        if (Textos.normalizar(entrada).contains("correg")) {
+            c.reiniciarDatos();
+            c.estado = EstadoConversacion.NOMBRE;
+            return responder(c, List.of("De acuerdo, corrijamos tus datos. ¿Cuál es tu nombre?"), List.of());
+        }
+        Boolean confirma = Textos.siONo(entrada);
+        if (confirma == null) {
+            return responder(c, List.of("Responde «Sí, registrar» o «Corregir datos», por favor."), CONFIRMAR);
+        }
+        if (!confirma) {
+            c.estado = EstadoConversacion.MENU;
+            c.reiniciarDatos();
+            return responder(c, List.of("Entendido, no registré tus datos. ¿Puedo ayudarte con algo más?"), MENU);
+        }
         try {
-            prospectos.registrar(new ProspectoRequest(c.nombre, c.telefono, c.servicio, c.presupuesto, urgencia.name()),
-                    c.canal);
+            prospectos.registrar(new ProspectoRequest(c.nombre, c.telefono, c.servicio, c.presupuesto,
+                    c.urgencia.name()), c.canal);
         } catch (RuntimeException ex) {
             log.error("No se pudo registrar el prospecto del chat", ex);
             return responder(c, List.of("No pudimos registrar tus datos en este momento. Inténtalo de nuevo en unos "
-                    + "minutos."), URGENCIAS);
+                    + "minutos."), CONFIRMAR);
         }
         String nombre = Textos.primerNombre(c.nombre);
         c.estado = EstadoConversacion.MENU;
@@ -222,6 +246,21 @@ public class ConversacionService {
         return new RespuestaChat(c.id, List.of("Gracias, " + nombre
                 + ". Registramos tus datos y un asesor te contactará pronto.", "¿Puedo ayudarte con algo más?"),
                 MENU, true, false);
+    }
+
+    static String resumen(Conversacion c) {
+        String urgencia = switch (c.urgencia) {
+            case ALTA -> "Alta (esta semana)";
+            case MEDIA -> "Media (este mes)";
+            case BAJA -> "Baja (solo averiguando)";
+        };
+        return "Revisa tus datos:\n"
+                + "• Nombre: " + c.nombre + "\n"
+                + "• Celular: " + c.telefono + "\n"
+                + "• Servicio: " + c.servicio + "\n"
+                + "• Presupuesto: " + String.format(Locale.US, "S/ %,.2f", c.presupuesto) + "\n"
+                + "• Urgencia: " + urgencia + "\n"
+                + "¿Los registro?";
     }
 
     static Urgencia leerUrgencia(String entrada) {
@@ -252,6 +291,7 @@ public class ConversacionService {
             case CONSENTIMIENTO -> List.of("Sí, acepto", "No");
             case SERVICIO -> SERVICIOS;
             case URGENCIA -> URGENCIAS;
+            case CONFIRMACION -> CONFIRMAR;
             default -> List.of();
         };
     }

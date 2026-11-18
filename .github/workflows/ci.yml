@@ -239,6 +239,10 @@ jobs:
           for t in "Quiero cotizar" "Sí, acepto" "Chat CI" "12345"; do r=$(enviar "$s" "$t"); done
           echo "$r" | jq -e '.mensajes[0] | contains("9 dígitos")'
           for t in "987 111 222" "Marketing digital" "S/ 2,500" "Media: este mes"; do r=$(enviar "$s" "$t"); done
+          echo "4. Antes de registrar muestra el resumen y pide confirmación (HU04)"
+          echo "$r" | jq -e '.registrado == false and (.mensajes[0] | contains("Revisa tus datos")) and .opciones == ["Sí, registrar", "Corregir datos"]'
+          test "$(psql -tAc "SELECT count(*) FROM prospectos WHERE nombre = 'Chat CI'")" = "0"
+          r=$(enviar "$s" "Sí, registrar")
           echo "$r" | jq -e '.registrado == true'
           test "$(psql -tAc "SELECT telefono || '/' || calificacion || '/' || puntaje FROM prospectos WHERE nombre = 'Chat CI'")" = "987111222/TIBIO/65"
           echo "Chat del asistente verificado"

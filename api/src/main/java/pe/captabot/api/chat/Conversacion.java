@@ -1,5 +1,7 @@
 package pe.captabot.api.chat;
 
+import pe.captabot.api.modelo.Urgencia;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -14,6 +16,7 @@ class Conversacion {
     String telefono;
     String servicio;
     BigDecimal presupuesto;
+    Urgencia urgencia;
     Instant ultimaActividad = Instant.now();
 
     Conversacion(String id, String canal) {
@@ -26,5 +29,6 @@ class Conversacion {
         telefono = null;
         servicio = null;
         presupuesto = null;
+        urgencia = null;
     }
 }
