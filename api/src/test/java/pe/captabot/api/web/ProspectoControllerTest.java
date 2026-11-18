@@ -2,6 +2,9 @@ package pe.captabot.api.web;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -9,15 +12,21 @@ import pe.captabot.api.modelo.Calificacion;
 import pe.captabot.api.modelo.Etapa;
 import pe.captabot.api.modelo.Prospecto;
 import pe.captabot.api.modelo.Urgencia;
+import pe.captabot.api.servicio.FiltroProspectos;
 import pe.captabot.api.servicio.ProspectoNoEncontradoException;
 import pe.captabot.api.servicio.ProspectoService;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Pruebas del endpoint que usa watsonx Assistant (HU05). */
+/** Pruebas del endpoint que usa watsonx Assistant (HU05) y de la lista del panel (HU08). */
 class ProspectoControllerTest {
 
     private ProspectoService servicio;
@@ -102,5 +111,35 @@ class ProspectoControllerTest {
         mvc.perform(get("/api/prospectos/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("No existe el prospecto 99"));
+    }
+
+    @Test
+    void listaPaginadaConFiltrosDeCalificacionYFechas() throws Exception {
+        when(servicio.listar(any(), eq(0), eq(20)))
+                .thenReturn(new PageImpl<>(List.of(prospectoDeEjemplo()), PageRequest.of(0, 20), 1));
+
+        mvc.perform(get("/api/prospectos")
+                        .param("calificacion", "CALIENTE")
+                        .param("desde", "2026-11-01")
+                        .param("hasta", "2026-11-30"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].nombre").value("María Quispe"))
+                .andExpect(jsonPath("$.contenido[0].calificacion").value("CALIENTE"))
+                .andExpect(jsonPath("$.pagina").value(0))
+                .andExpect(jsonPath("$.tamano").value(20))
+                .andExpect(jsonPath("$.totalElementos").value(1));
+
+        ArgumentCaptor<FiltroProspectos> filtro = ArgumentCaptor.forClass(FiltroProspectos.class);
+        verify(servicio).listar(filtro.capture(), eq(0), eq(20));
+        assertThat(filtro.getValue().calificacion()).isEqualTo(Calificacion.CALIENTE);
+        assertThat(filtro.getValue().desde()).isEqualTo(LocalDate.of(2026, 11, 1));
+        assertThat(filtro.getValue().hasta()).isEqualTo(LocalDate.of(2026, 11, 30));
+    }
+
+    @Test
+    void rechazaUnaCalificacionDesconocida() throws Exception {
+        mvc.perform(get("/api/prospectos").param("calificacion", "TEMPLADO"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Valor no válido para calificacion"));
     }
 }

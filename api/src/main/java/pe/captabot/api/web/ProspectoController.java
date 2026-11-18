@@ -1,6 +1,7 @@
 package pe.captabot.api.web;
 
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 import pe.captabot.api.modelo.Calificacion;
 import pe.captabot.api.modelo.Etapa;
 import pe.captabot.api.modelo.Prospecto;
+import pe.captabot.api.servicio.FiltroProspectos;
 import pe.captabot.api.servicio.ProspectoService;
 
 import java.net.URI;
-import java.util.List;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/prospectos")
@@ -40,11 +42,20 @@ public class ProspectoController {
         return ResponseEntity.created(URI.create("/api/prospectos/" + p.getId())).body(respuesta);
     }
 
-    /** Lista de prospectos para el panel, con filtros opcionales. */
+    /**
+     * HU08: lista paginada para el panel, con los de mayor puntaje primero.
+     * Filtros opcionales: calificacion, etapa, desde y hasta (AAAA-MM-DD).
+     */
     @GetMapping
-    public List<ProspectoResponse> listar(@RequestParam(required = false) Calificacion calificacion,
-                                          @RequestParam(required = false) Etapa etapa) {
-        return servicio.listar(calificacion, etapa).stream().map(ProspectoResponse::desde).toList();
+    public PaginaResponse<ProspectoResponse> listar(
+            @RequestParam(required = false) Calificacion calificacion,
+            @RequestParam(required = false) Etapa etapa,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "" + ProspectoService.TAMANO_PAGINA) int tamano) {
+        FiltroProspectos filtro = new FiltroProspectos(calificacion, etapa, desde, hasta);
+        return PaginaResponse.desde(servicio.listar(filtro, pagina, tamano), ProspectoResponse::desde);
     }
 
     @GetMapping("/{id}")

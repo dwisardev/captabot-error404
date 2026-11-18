@@ -3,8 +3,14 @@ package pe.captabot.api.servicio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import pe.captabot.api.modelo.Calificacion;
 import pe.captabot.api.modelo.Etapa;
 import pe.captabot.api.modelo.Prospecto;
@@ -13,6 +19,7 @@ import pe.captabot.api.repositorio.ProspectoRepository;
 import pe.captabot.api.web.ProspectoRequest;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,9 +28,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-/** Pruebas del registro y la consulta de prospectos (HU05). */
+/** Pruebas del registro (HU05) y de la lista de prospectos (HU08). */
 @ExtendWith(MockitoExtension.class)
 class ProspectoServiceTest {
 
@@ -69,11 +77,36 @@ class ProspectoServiceTest {
     }
 
     @Test
-    void filtraPorCalificacionYEtapa() {
-        when(repositorio.findByCalificacionAndEtapaOrderByPuntajeDescCreadoEnDesc(Calificacion.CALIENTE, Etapa.NUEVO))
-                .thenReturn(List.of(new Prospecto()));
+    void listaPaginasDe20ConLosDeMayorPuntajePrimero() {
+        when(repositorio.findAll(ArgumentMatchers.<Specification<Prospecto>>any(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(new Prospecto())));
+        FiltroProspectos filtro = new FiltroProspectos(Calificacion.CALIENTE, Etapa.NUEVO,
+                LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30));
 
-        assertThat(servicio.listar(Calificacion.CALIENTE, Etapa.NUEVO)).hasSize(1);
+        Page<Prospecto> pagina = servicio.listar(filtro, 0, ProspectoService.TAMANO_PAGINA);
+
+        assertThat(pagina.getContent()).hasSize(1);
+        ArgumentCaptor<Pageable> solicitada = ArgumentCaptor.forClass(Pageable.class);
+        verify(repositorio).findAll(ArgumentMatchers.<Specification<Prospecto>>any(), solicitada.capture());
+        assertThat(solicitada.getValue().getPageSize()).isEqualTo(20);
+        assertThat(solicitada.getValue().getSort().getOrderFor("puntaje").isDescending()).isTrue();
+    }
+
+    @Test
+    void rechazaUnRangoDeFechasInvertido() {
+        FiltroProspectos filtro = new FiltroProspectos(null, null, LocalDate.of(2026, 11, 30), LocalDate.of(2026, 11, 1));
+
+        assertThatThrownBy(() -> servicio.listar(filtro, 0, 20))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("fecha inicial");
+        verifyNoInteractions(repositorio);
+    }
+
+    @Test
+    void rechazaUnTamanoDePaginaFueraDeRango() {
+        assertThatThrownBy(() -> servicio.listar(FiltroProspectos.sinFiltros(), 0, 500))
+                .isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(repositorio);
     }
 
     @Test
