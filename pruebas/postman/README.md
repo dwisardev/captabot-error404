@@ -1,7 +1,7 @@
 # Prueba de integración con Postman (SCRUM-47)
 
-La colección `CaptaBot.postman_collection.json` tiene 30 solicitudes con sus pruebas
-automáticas, ordenadas en cuatro carpetas que se ejecutan en orden:
+La colección `CaptaBot.postman_collection.json` tiene 41 solicitudes con sus pruebas
+automáticas, ordenadas en cinco carpetas que se ejecutan en orden:
 
 | Carpeta | Historias | Qué comprueba |
 |---|---|---|
@@ -9,6 +9,7 @@ automáticas, ordenadas en cuatro carpetas que se ejecutan en orden:
 | 2. Inicio de sesión y usuarios | HU06, HU07 | Login, contraseña incorrecta, correo repetido, edición y desactivación |
 | 3. Lista, etapas y notas | HU08, HU09, HU10 | Filtros y orden, cambio de etapa con historial, notas y permiso del autor |
 | 4. Reportes | HU11, HU12 | Prospectos por semana, embudo y tasa de conversión |
+| 5. Chat del asistente | HU01, HU02, HU04, HU05 | Conversación completa sin clave: pregunta frecuente, consentimiento, datos, validaciones y registro |
 
 ## Ejecutar en Postman
 

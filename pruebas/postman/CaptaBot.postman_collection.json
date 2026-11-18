@@ -1393,6 +1393,532 @@
           ]
         }
       ]
+    },
+    {
+      "name": "5. Chat del asistente (HU01, HU02, HU04, HU05)",
+      "description": "Conversación completa con el chat de la página web. Es público: no envía la clave de la API.",
+      "item": [
+        {
+          "name": "Abrir el chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Saluda sin pedir la clave de la API\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(r.mensajes[0]).to.include(\"Soy CaptaBot\");",
+                  "});",
+                  "pm.test(\"Muestra el menú\", () => pm.expect(r.opciones).to.include(\"Quiero cotizar\"));",
+                  "pm.collectionVariables.set(\"chatSesion\", r.sesionId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pregunta frecuente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"¿Puedo pagar con Yape?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Responde el tema correcto\", () => pm.expect(r.mensajes[0]).to.include(\"Yape\"));",
+                  "pm.test(\"Ofrece que un asesor lo contacte\", () => pm.expect(r.opciones).to.eql([\"Sí\", \"No\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pide un asesor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"Sí\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pide consentimiento\", () => pm.expect(pm.response.json().mensajes[0]).to.include(\"¿Estás de acuerdo?\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Acepta el consentimiento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"Sí, acepto\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pide el nombre\", () => pm.expect(pm.response.json().mensajes[0]).to.include(\"¿Cuál es tu nombre?\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Escribe su nombre",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"Postman Chat\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Lo saluda por su nombre y pide el celular\", () =>",
+                  "    pm.expect(pm.response.json().mensajes[0]).to.include(\"Gracias, Postman.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Celular inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Explica el formato y lo vuelve a pedir\", () =>",
+                  "    pm.expect(pm.response.json().mensajes[0]).to.include(\"9 dígitos\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Celular válido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"955 444 333\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pregunta el servicio con opciones\", () =>",
+                  "    pm.expect(pm.response.json().opciones).to.include(\"Soporte técnico\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Servicio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"Soporte técnico\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pide el presupuesto\", () => pm.expect(pm.response.json().mensajes[0]).to.include(\"presupuesto\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Presupuesto escrito como 1.5k",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"1.5k\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Entiende el monto y pregunta la urgencia\", () =>",
+                  "    pm.expect(pm.response.json().opciones).to.include(\"Baja: solo estoy averiguando\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Urgencia y registro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/mensajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "mensajes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sesionId\": \"{{chatSesion}}\",\n  \"texto\": \"Baja: solo estoy averiguando\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Registra al prospecto\", () => {",
+                  "    pm.expect(r.registrado).to.be.true;",
+                  "    pm.expect(r.mensajes[0]).to.include(\"un asesor te contactará\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El prospecto del chat quedó calificado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos?calificacion=FRIO&tamano=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ],
+              "query": [
+                {
+                  "key": "calificacion",
+                  "value": "FRIO"
+                },
+                {
+                  "key": "tamano",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const p = pm.response.json().contenido.find(x => x.nombre === \"Postman Chat\");",
+                  "pm.test(\"Aparece en la lista para el panel\", () => pm.expect(p).to.not.be.undefined);",
+                  "pm.test(\"S/ 1500 y urgencia baja = 30 puntos, FRIO\", () => {",
+                  "    pm.expect(p.puntaje).to.eql(30);",
+                  "    pm.expect(p.telefono).to.eql(\"955444333\");",
+                  "    pm.expect(p.canal).to.eql(\"CHAT_WEB\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
@@ -1422,6 +1948,10 @@
     },
     {
       "key": "notaId",
+      "value": ""
+    },
+    {
+      "key": "chatSesion",
       "value": ""
     }
   ]
