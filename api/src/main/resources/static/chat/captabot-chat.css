@@ -1,0 +1,38 @@
+/* Chat de CaptaBot – se inserta en cualquier página con chat/captabot-chat.js */
+.cb-boton {
+    position: fixed; right: 22px; bottom: 22px; z-index: 9998;
+    width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
+    background: #1f4e79; color: #fff; box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
+    display: flex; align-items: center; justify-content: center;
+}
+.cb-boton:hover { background: #163a5a; }
+.cb-boton svg { width: 28px; height: 28px; }
+.cb-panel {
+    position: fixed; right: 22px; bottom: 94px; z-index: 9999;
+    width: 370px; max-width: calc(100vw - 24px); height: 540px; max-height: calc(100vh - 120px);
+    display: flex; flex-direction: column; overflow: hidden;
+    background: #fff; border-radius: 14px; box-shadow: 0 12px 36px rgba(0, 0, 0, .25);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1d2733;
+}
+.cb-panel[hidden] { display: none; }
+.cb-cabecera { display: flex; align-items: center; gap: .6rem; padding: .85rem 1rem; background: #1f4e79; color: #fff; }
+.cb-cabecera strong { display: block; font-size: 1rem; }
+.cb-cabecera span { font-size: .8rem; opacity: .85; }
+.cb-cabecera .cb-cerrar { margin-left: auto; background: none; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; line-height: 1; }
+.cb-avatar { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #1f4e79; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.cb-mensajes { flex: 1; overflow-y: auto; padding: 1rem; background: #f4f6f9; display: flex; flex-direction: column; gap: .5rem; }
+.cb-burbuja { max-width: 82%; padding: .55rem .8rem; border-radius: 14px; font-size: .92rem; line-height: 1.4; white-space: pre-line; }
+.cb-bot { align-self: flex-start; background: #fff; border: 1px solid #dde3ea; border-bottom-left-radius: 4px; }
+.cb-cliente { align-self: flex-end; background: #1f4e79; color: #fff; border-bottom-right-radius: 4px; }
+.cb-exito { border-color: #b7e1c7; background: #e8f6ee; }
+.cb-escribiendo { align-self: flex-start; color: #5b6876; font-size: .85rem; font-style: italic; }
+.cb-opciones { display: flex; flex-wrap: wrap; gap: .4rem; padding: .5rem .75rem 0; background: #fff; }
+.cb-opciones:empty { display: none; }
+.cb-opcion { border: 1px solid #1f4e79; color: #1f4e79; background: #fff; border-radius: 999px; padding: .3rem .75rem; font-size: .85rem; cursor: pointer; }
+.cb-opcion:hover { background: #eaf1f8; }
+.cb-entrada { display: flex; gap: .5rem; padding: .75rem; background: #fff; border-top: 1px solid #eef1f4; }
+.cb-entrada input { flex: 1; border: 1px solid #c5ced8; border-radius: 999px; padding: .55rem .9rem; font: inherit; font-size: .92rem; }
+.cb-entrada input:focus { outline: 2px solid #9ec3e6; border-color: #1f4e79; }
+.cb-entrada button { border: none; background: #1f4e79; color: #fff; border-radius: 999px; padding: 0 1rem; cursor: pointer; font-weight: 600; }
+.cb-entrada button:disabled, .cb-entrada input:disabled { opacity: .6; cursor: default; }
+.cb-pie { text-align: center; font-size: .7rem; color: #8a96a3; padding: 0 0 .5rem; background: #fff; }

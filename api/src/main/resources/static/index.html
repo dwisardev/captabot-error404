@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Servicios Digitales – Demo de CaptaBot</title>
+    <link rel="stylesheet" href="chat/captabot-chat.css">
+    <style>
+        :root { --azul: #1f4e79; --texto: #1d2733; --suave: #5b6876; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: #f5f7fa; }
+        header { background: var(--azul); color: #fff; padding: 3.5rem 1.5rem 3rem; text-align: center; }
+        header h1 { margin: 0 0 .5rem; font-size: 2rem; }
+        header p { margin: 0 auto; max-width: 560px; opacity: .9; font-size: 1.1rem; }
+        main { max-width: 960px; margin: 0 auto; padding: 2.5rem 1.5rem 6rem; }
+        h2 { font-size: 1.3rem; }
+        .servicios { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .tarjeta { background: #fff; border: 1px solid #dde3ea; border-radius: 12px; padding: 1.25rem; }
+        .tarjeta h3 { margin: 0 0 .4rem; }
+        .tarjeta p { margin: 0; color: var(--suave); }
+        .llamado { margin-top: 2rem; background: #fff; border-left: 4px solid var(--azul); border-radius: 8px; padding: 1rem 1.25rem; }
+        footer { text-align: center; color: var(--suave); font-size: .85rem; padding: 1.5rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Servicios Digitales</h1>
+        <p>Páginas web, marketing digital y soporte técnico para pequeñas empresas.</p>
+    </header>
+    <main>
+        <h2>Nuestros servicios</h2>
+        <div class="servicios">
+            <div class="tarjeta"><h3>Diseño web</h3><p>Páginas informativas y tiendas en línea adaptadas a celulares.</p></div>
+            <div class="tarjeta"><h3>Marketing digital</h3><p>Gestión de redes sociales y campañas para conseguir clientes.</p></div>
+            <div class="tarjeta"><h3>Soporte técnico</h3><p>Mantenimiento de equipos y redes para tu negocio.</p></div>
+        </div>
+        <div class="llamado">
+            <strong>¿Tienes dudas o quieres una cotización?</strong>
+            Abre el chat en la esquina inferior derecha: nuestro asistente te responde al instante.
+        </div>
+    </main>
+    <footer>Empresa de demostración · CaptaBot – Equipo ERROR 404 · Proyecto Integrador, IES Cibertec</footer>
+    <script src="chat/captabot-chat.js"></script>
+</body>
+</html>
