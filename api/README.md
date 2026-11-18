@@ -10,8 +10,21 @@ Recibe los datos que el prospecto deja en el chat de watsonx Assistant, lo calif
 |---|---|---|
 | `GET` | `/api/health` | Comprueba que la API está en línea (no pide clave) |
 | `POST` | `/api/prospectos` | Registra un prospecto desde el asistente (HU05) y lo califica (HU03) |
-| `GET` | `/api/prospectos?calificacion=CALIENTE&etapa=NUEVO` | Lista prospectos; los filtros son opcionales |
+| `GET` | `/api/prospectos?calificacion=&etapa=&desde=&hasta=&pagina=0&tamano=20` | Lista paginada, calientes primero; filtros opcionales, fechas en `AAAA-MM-DD` (HU08) |
 | `GET` | `/api/prospectos/{id}` | Detalle de un prospecto |
+| `PATCH` | `/api/prospectos/{id}/etapa` | Cambia la etapa y guarda quién y cuándo (HU09). Cuerpo: `{"etapa":"CONTACTADO","usuarioId":1}` |
+| `GET` | `/api/prospectos/{id}/historial` | Cambios de etapa, del más reciente al más antiguo |
+| `GET` / `POST` | `/api/prospectos/{id}/notas` | Notas de seguimiento (HU10). Cuerpo: `{"usuarioId":1,"contenido":"..."}` |
+| `PUT` | `/api/prospectos/{id}/notas/{notaId}` | Edita una nota; solo su autor (si no, `403`). No hay opción de borrar |
+| `POST` | `/api/auth/login` | Valida correo y contraseña (HU06); `401` si son incorrectos o el usuario está desactivado |
+| `GET` / `POST` | `/api/usuarios` | Lista y crea usuarios (HU07); `409` si el correo ya existe |
+| `PUT` | `/api/usuarios/{id}` | Edita un usuario; la contraseña solo cambia si se envía |
+| `PATCH` | `/api/usuarios/{id}/estado` | Activa o desactiva: `{"activo":false}` |
+| `GET` | `/api/reportes/semanal?semanas=8` | Prospectos por semana y calificación (HU11) |
+| `GET` | `/api/reportes/embudo?desde=&hasta=` | Prospectos en cada etapa (HU12) |
+| `GET` | `/api/reportes/conversion?desde=&hasta=` | Porcentaje que llega a `CERRADO_GANADO` (HU12) |
+
+Las contraseñas se guardan cifradas con BCrypt y nunca se devuelven en las respuestas.
 
 Ejemplo de registro:
 

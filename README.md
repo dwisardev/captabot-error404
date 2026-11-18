@@ -42,30 +42,34 @@ o el pull request y aparecerá en la tarea, por ejemplo:
 
 | Componente | Estado |
 |---|---|
-| Base de datos PostgreSQL | Listo: tablas, vistas de reportes y 10 prospectos de prueba |
-| API Java (Spring Boot) | Listo: registro, calificación automática, consulta y filtros |
-| Pruebas | 23 pruebas JUnit y una prueba de integración en cada push |
-| Integración continua | GitHub Actions: scripts SQL, pruebas de la API e integración |
+| Base de datos PostgreSQL | Listo: tablas, vistas de reportes y datos de prueba |
+| API Java (Spring Boot) | Listo: registro y calificación, usuarios, inicio de sesión, seguimiento y reportes |
+| Panel administrativo .NET 10 | Listo: inicio de sesión, prospectos, etapas, notas, usuarios y reportes con Excel |
+| Pruebas | JUnit en la API, xUnit en el panel y prueba de punta a punta en cada push |
+| Integración continua | GitHub Actions: BD, API, panel y prueba de punta a punta |
 | Asistente watsonx | Material listo; falta crear la instancia y configurarlo |
-| Panel administrativo .NET | Pendiente (Sprint 2) |
 
 ## Cómo ejecutarlo en local
 
-Requisitos: PostgreSQL 16, Java 21 y Maven.
+Requisitos: PostgreSQL 16, Java 21 con Maven y el SDK de .NET 10.
 
 ```bash
 # 1. Base de datos (ver base-datos/README.md)
-createdb captabot
-psql -d captabot -f base-datos/scripts/01_crear_esquema.sql
-psql -d captabot -f base-datos/scripts/02_vistas_reportes.sql
-psql -d captabot -f base-datos/datos-prueba/01_datos_prueba.sql
+sudo -u postgres psql -c "CREATE ROLE captabot LOGIN PASSWORD 'captabot';"
+sudo -u postgres psql -c "CREATE DATABASE captabot OWNER captabot;"
+export PGPASSWORD=captabot
+psql -h localhost -U captabot -d captabot -f base-datos/scripts/01_crear_esquema.sql
+psql -h localhost -U captabot -d captabot -f base-datos/scripts/02_vistas_reportes.sql
+psql -h localhost -U captabot -d captabot -f base-datos/datos-prueba/01_datos_prueba.sql
 
-# 2. API (ver api/README.md)
-cd api
-mvn spring-boot:run
+# 2. API, en una terminal (ver api/README.md)
+cd api && mvn spring-boot:run
+
+# 3. Panel, en otra terminal (ver panel/README.md)
+cd panel/CaptaBot.Panel && dotnet run
 ```
 
-La API queda en `http://localhost:8080`; `GET /api/health` confirma que está activa.
+Abran `http://localhost:5080` e inicien sesión con `admin@captabot.pe` / `Demo2026!`.
 Para conectar el asistente, sigan `asistente/README.md`.
 
 ## Integración continua
@@ -74,6 +78,8 @@ En cada push a `main` y en cada pull request, GitHub Actions:
 
 1. Ejecuta los scripts SQL en un PostgreSQL limpio.
 2. Compila la API y corre las pruebas JUnit.
-3. Levanta la API con la base de datos y prueba el registro completo de un prospecto.
+3. Compila el panel y corre las pruebas xUnit.
+4. Levanta la base de datos, la API y el panel, y prueba el sistema de punta a punta: registro
+   desde el asistente, inicio de sesión, cambio de etapa, notas, reportes y descarga de Excel.
 
 Si algo falla, el resultado aparece en la pestaña **Actions** y en el pull request.
