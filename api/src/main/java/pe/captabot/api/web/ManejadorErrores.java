@@ -8,7 +8,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import pe.captabot.api.servicio.ProspectoNoEncontradoException;
+import pe.captabot.api.servicio.AccesoDenegadoException;
+import pe.captabot.api.servicio.ConflictoException;
+import pe.captabot.api.servicio.CredencialesInvalidasException;
+import pe.captabot.api.servicio.NoEncontradoException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -42,8 +45,27 @@ public class ManejadorErrores {
         return ResponseEntity.badRequest().body(Map.of("error", "El cuerpo de la solicitud no es un JSON válido"));
     }
 
-    @ExceptionHandler(ProspectoNoEncontradoException.class)
-    public ResponseEntity<Map<String, Object>> noEncontrado(ProspectoNoEncontradoException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+    @ExceptionHandler(NoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> noEncontrado(NoEncontradoException ex) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ConflictoException.class)
+    public ResponseEntity<Map<String, Object>> conflicto(ConflictoException ex) {
+        return error(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(AccesoDenegadoException.class)
+    public ResponseEntity<Map<String, Object>> accesoDenegado(AccesoDenegadoException ex) {
+        return error(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<Map<String, Object>> credencialesInvalidas(CredencialesInvalidasException ex) {
+        return error(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    private static ResponseEntity<Map<String, Object>> error(HttpStatus estado, String mensaje) {
+        return ResponseEntity.status(estado).body(Map.of("error", mensaje));
     }
 }
