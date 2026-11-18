@@ -1,0 +1,13 @@
+# Claves y configuración local: nunca subirlas
+.env
+
+# Compilados
+api/target/
+**/bin/
+**/obj/
+
+# Editores y sistema
+.idea/
+.vscode/
+*.iml
+.DS_Store

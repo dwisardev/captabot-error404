@@ -14,6 +14,7 @@ on:
       - api/pom.xml
       - 'panel/**/*.csproj'
       - 'base-datos/**'
+      - 'api/src/main/resources/static/**'
       - .github/workflows/docker.yml
   workflow_dispatch:
 
@@ -42,6 +43,9 @@ jobs:
           curl -fs http://localhost:8080/api/prospectos | jq -e '.totalElementos == 10'
           code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5080/Prospectos)
           test "$code" = "302"
+          curl -fs http://localhost:8080/ | grep -q 'captabot-chat.js'
+          curl -fs -X POST http://localhost:8080/api/chat/mensajes -H 'Content-Type: application/json' \
+            -d '{"texto":""}' | jq -e '.mensajes[0] | contains("CaptaBot")'
           echo "Docker Compose verificado"
 
       - name: Mostrar los logs

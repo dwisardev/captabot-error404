@@ -1,6 +1,6 @@
 # CaptaBot completo con un solo comando:  docker compose up --build
-# Panel: http://localhost:5080  (admin@captabot.pe / Demo2026!)
-# API:   http://localhost:8080
+# Página web con el chat: http://localhost:8080
+# Panel:                  http://localhost:5080  (admin@captabot.pe / Demo2026!)
 name: captabot
 
 services:
@@ -31,6 +31,10 @@ services:
       DB_USER: captabot
       DB_PASSWORD: captabot
       CAPTABOT_API_KEY: ${CAPTABOT_API_KEY:-}
+      # Asistente con Azure AI Language (opcional). Se completan en el archivo .env (ver .env.ejemplo)
+      AZURE_LANGUAGE_ENDPOINT: ${AZURE_LANGUAGE_ENDPOINT:-}
+      AZURE_LANGUAGE_KEY: ${AZURE_LANGUAGE_KEY:-}
+      AZURE_LANGUAGE_PROYECTO: ${AZURE_LANGUAGE_PROYECTO:-}
     ports:
       - "8080:8080"
     depends_on:
