@@ -1,0 +1,156 @@
+# Integración continua de CaptaBot – Equipo ERROR 404
+# Se ejecuta en cada push a main y en cada pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  base-datos:
+    name: Base de datos (scripts SQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: captabot
+          POSTGRES_PASSWORD: captabot
+          POSTGRES_DB: captabot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U captabot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGUSER: captabot
+      PGPASSWORD: captabot
+      PGDATABASE: captabot
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Ejecutar los scripts
+        run: |
+          psql -v ON_ERROR_STOP=1 -f base-datos/scripts/01_crear_esquema.sql
+          psql -v ON_ERROR_STOP=1 -f base-datos/scripts/02_vistas_reportes.sql
+          psql -v ON_ERROR_STOP=1 -f base-datos/datos-prueba/01_datos_prueba.sql
+
+      - name: Verificar los datos de prueba
+        run: |
+          test "$(psql -tAc 'SELECT COUNT(*) FROM prospectos')" = "10"
+          psql -c 'SELECT * FROM v_embudo_etapas'
+          psql -c 'SELECT * FROM v_tasa_conversion'
+
+  api:
+    name: API (compilación y pruebas unitarias)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: api/pom.xml
+
+      - name: Compilar y ejecutar las pruebas
+        run: mvn -B -ntp verify
+
+  integracion:
+    name: Prueba de integración (API + PostgreSQL)
+    needs: [base-datos, api]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: captabot
+          POSTGRES_PASSWORD: captabot
+          POSTGRES_DB: captabot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U captabot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGUSER: captabot
+      PGPASSWORD: captabot
+      PGDATABASE: captabot
+      DB_URL: jdbc:postgresql://localhost:5432/captabot
+      DB_USER: captabot
+      DB_PASSWORD: captabot
+      CAPTABOT_API_KEY: clave-de-prueba-ci
+      API: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: api/pom.xml
+
+      - name: Crear la base de datos
+        run: |
+          psql -v ON_ERROR_STOP=1 -f base-datos/scripts/01_crear_esquema.sql
+          psql -v ON_ERROR_STOP=1 -f base-datos/scripts/02_vistas_reportes.sql
+          psql -v ON_ERROR_STOP=1 -f base-datos/datos-prueba/01_datos_prueba.sql
+
+      - name: Compilar la API
+        working-directory: api
+        run: mvn -B -ntp -DskipTests package
+
+      - name: Iniciar la API
+        run: |
+          nohup java -jar api/target/captabot-api.jar > api.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fs "$API/api/health" && exit 0
+            sleep 2
+          done
+          echo "La API no respondió a tiempo"
+          exit 1
+
+      - name: Probar el flujo asistente → API → base de datos
+        run: |
+          set -e
+          echo "1. Sin clave, la API responde 401"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/prospectos" \
+            -H 'Content-Type: application/json' -d '{}')
+          test "$code" = "401"
+
+          echo "2. Registro válido: se califica como CALIENTE"
+          resp=$(curl -fs -X POST "$API/api/prospectos" \
+            -H 'Content-Type: application/json' -H "X-API-Key: $CAPTABOT_API_KEY" \
+            -d '{"nombre":"Prueba CI","telefono":"987654321","servicioInteres":"Diseño web","presupuesto":6000,"urgencia":"alta"}')
+          echo "$resp"
+          echo "$resp" | grep -q '"calificacion":"CALIENTE"'
+
+          echo "3. El prospecto quedó guardado en PostgreSQL"
+          test "$(psql -tAc "SELECT calificacion || '/' || etapa FROM prospectos WHERE nombre = 'Prueba CI'")" = "CALIENTE/NUEVO"
+
+          echo "4. Datos inválidos: la API responde 400"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/prospectos" \
+            -H 'Content-Type: application/json' -H "X-API-Key: $CAPTABOT_API_KEY" \
+            -d '{"nombre":"X","telefono":"123","servicioInteres":"Y","presupuesto":10,"urgencia":"alta"}')
+          test "$code" = "400"
+
+          echo "5. La lista filtrada incluye el nuevo prospecto"
+          curl -fs -H "X-API-Key: $CAPTABOT_API_KEY" "$API/api/prospectos?calificacion=CALIENTE" | grep -q 'Prueba CI'
+          echo "Prueba de integración completada"
+
+      - name: Mostrar el log de la API
+        if: always()
+        run: cat api.log || true
