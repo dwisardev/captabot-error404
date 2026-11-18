@@ -38,7 +38,7 @@ public sealed class CaptabotApiClient : ICaptabotApi
         {
             var error = await LeerErrorAsync(respuesta, ct);
             // Un 401 por la clave de la API es un problema de configuración, no del usuario.
-            if (error.Mensaje.Contains("clave de la API", StringComparison.OrdinalIgnoreCase))
+            if (error.Message.Contains("clave de la API", StringComparison.OrdinalIgnoreCase))
             {
                 throw error;
             }
