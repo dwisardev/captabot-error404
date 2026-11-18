@@ -15,7 +15,7 @@ Comprobar que CaptaBot cumple los criterios de aceptación de las 12 historias d
 | Base de datos PostgreSQL | Creación del esquema, restricciones, vistas y datos de prueba | Rendimiento con grandes volúmenes |
 | API Java (Spring Boot) | Reglas de negocio, validaciones, seguridad con clave, respuestas HTTP | Carga y estrés |
 | Panel .NET | Inicio de sesión, permisos, pantallas, filtros, exportación a Excel | Compatibilidad con navegadores antiguos |
-| Asistente watsonx | Preguntas frecuentes, captación de datos y llamada a la API (manual) | Comprensión de lenguaje fuera de las frases de ejemplo |
+| Asistente (chat + Azure AI Language) | Preguntas frecuentes, captación de datos, validaciones y registro del prospecto | Calidad de las respuestas de Azure fuera de las frases cargadas |
 
 ## 3. Tipos de prueba y herramientas
 
@@ -27,7 +27,7 @@ Comprobar que CaptaBot cumple los criterios de aceptación de las 12 historias d
 | Integración de la API | Postman y newman | 30 solicitudes con 41 verificaciones sobre la API real y la base de datos | En cada push y desde Postman |
 | Punta a punta | curl en GitHub Actions | BD + API + panel juntos: registro, inicio de sesión real, lista, reportes, Excel y usuarios | En cada push |
 | Contenedores | Docker Compose | Que el sistema completo levante con un solo comando | Cuando cambian Docker o las dependencias |
-| Asistente | Vista previa de watsonx Assistant | Conversaciones de los casos A01 a A06 | Manual, al configurar el asistente |
+| Asistente | JUnit, curl en el CI y navegador | Conversaciones de los casos A01 a A08 | En cada push; A07 y A08 a mano |
 | Aceptación | Demo con el Product Owner | Criterios de aceptación de cada historia | Al cierre de cada sprint |
 
 ## 4. Entorno de pruebas
@@ -44,20 +44,22 @@ Estado: **Auto** = automatizado y en verde en el CI · **Manual** = se prueba a 
 
 | Historia | N.° | Caso | Resultado esperado | Estado |
 |---|---|---|---|---|
-| HU01 | A01 | Preguntar el horario con distintas frases | Responde con el horario de atención | Manual |
-| HU01 | A02 | Escribir algo que el asistente no entiende | Muestra el mensaje de respaldo | Manual |
-| HU02 | A03 | Abrir `asistente/web/index.html` con los datos del chat | Aparece el botón del chat y responde | Manual |
+| HU01 | A01 | Preguntar el horario, los precios, el pago y la entrega con distintas frases | Responde el tema correcto y ofrece un asesor | Auto |
+| HU01 | A02 | Escribir algo que el asistente no entiende | Muestra el mensaje de respaldo | Auto |
+| HU02 | A03 | Abrir `http://localhost:8080` y el chat | La página carga el chat y saluda sin pedir clave | Auto |
 | HU03 | P01 | S/ 6000 y urgencia alta | 100 puntos, CALIENTE | Auto |
 | HU03 | P02 | S/ 2500 y urgencia media | 65 puntos, TIBIO | Auto |
 | HU03 | P03 | S/ 100 y urgencia baja | 15 puntos, FRIO | Auto |
 | HU03 | P04 | Montos en el borde de cada tramo (S/ 4999.99, 5000, 499.99, 500) y 70 puntos exactos | Se aplica el tramo correcto; 70 puntos ya es CALIENTE | Auto |
-| HU04 | A04 | Completar la conversación de captación | Pide consentimiento, nombre, celular, servicio, presupuesto y urgencia | Manual |
-| HU04 | A05 | Rechazar el consentimiento | Se despide sin guardar datos | Manual |
+| HU04 | A04 | Completar la conversación de captación | Pide consentimiento, nombre, celular, servicio, presupuesto y urgencia, y registra al prospecto | Auto |
+| HU04 | A05 | Rechazar el consentimiento | Se despide sin guardar datos | Auto |
 | HU05 | P05 | Registro válido desde la extensión | 201, mensaje con el primer nombre, guardado en etapa NUEVO | Auto |
 | HU05 | P06 | Teléfono con menos de 9 dígitos | 400 con el detalle del campo | Auto |
 | HU05 | P07 | Urgencia desconocida | 400 «La urgencia debe ser ALTA, MEDIA o BAJA» | Auto |
 | HU05 | P08 | Solicitud sin la clave X-API-Key | 401 | Auto |
-| HU05 | A06 | El asistente envía un celular inválido | Avisa y vuelve a pedir el celular | Manual |
+| HU05 | A06 | Escribir un celular inválido o un monto que no es número | Explica el formato y lo vuelve a pedir | Auto |
+| HU01 | A07 | Con Azure configurado, preguntar con otras palabras («¿abren los domingos?») | Responde Azure AI Language; `/api/health` indica `azure-ai-language` | Manual |
+| HU01 | A08 | Azure no responde o no está configurado | El chat responde con el buscador local | Auto |
 | HU06 | U01 | Inicio de sesión correcto | Entra al panel con su rol | Auto |
 | HU06 | U02 | Contraseña incorrecta | Mensaje «Correo o contraseña incorrectos» | Auto |
 | HU06 | U03 | Abrir cualquier página sin sesión | Redirige al inicio de sesión | Auto |
@@ -107,4 +109,5 @@ esperado, resultado obtenido y captura. La corrección se sube en un commit con 
 | Postman / newman | 30 solicitudes, 41 verificaciones, 0 fallos |
 | Punta a punta (BD + API + panel) | Correcta |
 | Docker Compose | Correcto |
-| Casos manuales del asistente (A01 a A06) | Pendientes: falta crear la instancia de watsonx |
+| Asistente (A01 a A06, A08) | Automatizados con JUnit y en el CI |
+| A07 con Azure AI Language | Pendiente: crear el recurso gratuito en Azure |

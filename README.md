@@ -11,7 +11,7 @@ Proyecto Integrador – IES Cibertec. Tablero en Jira: proyecto SCRUM.
 | `panel/` | Panel administrativo en C# ASP.NET Core |
 | `base-datos/scripts/` | Scripts SQL de PostgreSQL |
 | `base-datos/datos-prueba/` | Datos de ejemplo para pruebas y demo |
-| `asistente/` | Guía, preguntas frecuentes y extensión de watsonx Assistant |
+| `asistente/` | Asistente: guía de Azure AI Language, preguntas frecuentes y script de carga |
 | `pruebas/postman/` | Colección de Postman para la prueba de integración |
 | `docs/diagramas/` | Diagramas de draw.io |
 | `docs/entregables/` | Documentos del curso |
@@ -26,7 +26,7 @@ Proyecto Integrador – IES Cibertec. Tablero en Jira: proyecto SCRUM.
 | Alfredo Fara | @YakFar | Scrum Master | Diagramas, integración continua, informes |
 | Gustavo Huaman | @Gussoft | Desarrollo | API Java y reportes |
 | Said Oyola | @said5596 | Desarrollo | Base de datos y pruebas |
-| Vladimir Angelino | @DeiosZ | Desarrollo | Asistente watsonx y documentación |
+| Vladimir Angelino | @DeiosZ | Desarrollo | Asistente (chat y Azure AI Language) y documentación |
 
 El archivo `.github/CODEOWNERS` indica el responsable de cada carpeta, quien revisa los pull requests que la modifican.
 
@@ -47,7 +47,7 @@ o el pull request y aparecerá en la tarea, por ejemplo:
 | Panel administrativo .NET 10 | Listo: inicio de sesión, prospectos, etapas, notas, usuarios y reportes con Excel |
 | Pruebas | JUnit en la API, xUnit en el panel y prueba de punta a punta en cada push |
 | Integración continua | GitHub Actions: BD, API, panel y prueba de punta a punta |
-| Asistente watsonx | Material listo; falta crear la instancia y configurarlo |
+| Asistente virtual | Listo: chat en la página web con preguntas frecuentes y captación de datos; Azure AI Language opcional (gratis) |
 
 ## Cómo ejecutarlo en local
 
@@ -60,8 +60,8 @@ docker compose up --build
 ```
 
 La primera vez tarda unos minutos porque descarga las imágenes y compila. Luego abran
-`http://localhost:5080` e inicien sesión con `admin@captabot.pe` / `Demo2026!`. La API queda
-en `http://localhost:8080` y PostgreSQL en el puerto `5433`. Para apagar: `Ctrl+C` y
+`http://localhost:5080` e inicien sesión con `admin@captabot.pe` / `Demo2026!`. La página web de la
+PYME con el chat del asistente queda en `http://localhost:8080` y PostgreSQL en el puerto `5433`. Para apagar: `Ctrl+C` y
 `docker compose down` (agreguen `-v` para borrar la base y volver a cargar los datos de prueba).
 
 ### Opción 2: instalando cada parte
@@ -85,7 +85,7 @@ cd panel/CaptaBot.Panel && dotnet run
 ```
 
 Abran `http://localhost:5080` e inicien sesión con `admin@captabot.pe` / `Demo2026!`.
-Para conectar el asistente, sigan `asistente/README.md`.
+La página web de la PYME con el chat queda en `http://localhost:8080`. Para conectar Azure AI Language, sigan `asistente/README.md`.
 
 ## Integración continua
 
@@ -95,6 +95,6 @@ En cada push a `main` y en cada pull request, GitHub Actions:
 2. Compila la API y corre las pruebas JUnit.
 3. Compila el panel y corre las pruebas xUnit.
 4. Levanta la base de datos, la API y el panel, y prueba el sistema de punta a punta: registro
-   desde el asistente, inicio de sesión, cambio de etapa, notas, reportes y descarga de Excel.
+   desde el chat del asistente, inicio de sesión, cambio de etapa, notas, reportes y descarga de Excel.
 
 Si algo falla, el resultado aparece en la pestaña **Actions** y en el pull request.

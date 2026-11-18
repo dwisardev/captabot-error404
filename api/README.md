@@ -2,14 +2,15 @@
 
 Responsable: Gustavo Huaman (@Gussoft)
 
-Recibe los datos que el prospecto deja en el chat de watsonx Assistant, lo califica y lo guarda en PostgreSQL. También entrega la lista de prospectos al panel administrativo.
+Atiende el chat del asistente, califica a cada prospecto y lo guarda en PostgreSQL. También sirve la página web de la PYME con el chat y entrega los datos al panel administrativo.
 
 ## Endpoints
 
 | Método | Ruta | Uso |
 |---|---|---|
 | `GET` | `/api/health` | Comprueba que la API está en línea (no pide clave) |
-| `POST` | `/api/prospectos` | Registra un prospecto desde el asistente (HU05) y lo califica (HU03) |
+| `POST` | `/api/chat/mensajes` | Chat del asistente (HU01, HU02, HU04): `{"sesionId": null, "texto": "hola"}`. Público, sin clave |
+| `POST` | `/api/prospectos` | Registra un prospecto (HU05) y lo califica (HU03); el chat lo usa al terminar la conversación |
 | `GET` | `/api/prospectos?calificacion=&etapa=&desde=&hasta=&pagina=0&tamano=20` | Lista paginada, calientes primero; filtros opcionales, fechas en `AAAA-MM-DD` (HU08) |
 | `GET` | `/api/prospectos/{id}` | Detalle de un prospecto |
 | `PATCH` | `/api/prospectos/{id}/etapa` | Cambia la etapa y guarda quién y cuándo (HU09). Cuerpo: `{"etapa":"CONTACTADO","usuarioId":1}` |
@@ -63,7 +64,9 @@ Las reglas están en `CalificacionService.java` y las prueba `CalificacionServic
 
 ## Clave de la API
 
-Si la variable `CAPTABOT_API_KEY` tiene valor, todas las rutas `/api/**` (menos `/api/health`) exigen la cabecera `X-API-Key` con esa clave. watsonx Assistant la envía desde la extensión personalizada (ver `asistente/README.md`). Para desarrollo local se puede dejar vacía.
+Si la variable `CAPTABOT_API_KEY` tiene valor, todas las rutas `/api/**` (menos `/api/health` y `/api/chat/**`, que usa el navegador del cliente) exigen la cabecera `X-API-Key` con esa clave. El panel la envía en cada llamada. Para desarrollo local se puede dejar vacía.
+
+Para que Azure AI Language responda las preguntas frecuentes, configuren `AZURE_LANGUAGE_ENDPOINT`, `AZURE_LANGUAGE_KEY` y `AZURE_LANGUAGE_PROYECTO` (ver `asistente/README.md`). Sin ellas, el chat usa su buscador local.
 
 ## Ejecutar en tu computadora
 
