@@ -68,6 +68,8 @@ Si la variable `CAPTABOT_API_KEY` tiene valor, todas las rutas `/api/**` (menos 
 
 Para que Azure AI Language responda las preguntas frecuentes, configuren `AZURE_LANGUAGE_ENDPOINT`, `AZURE_LANGUAGE_KEY` y `AZURE_LANGUAGE_PROYECTO` (ver `asistente/README.md`). Sin ellas, el chat usa su buscador local.
 
+Con `TELEGRAM_BOT_TOKEN`, la API también atiende un bot de Telegram con la misma conversación; los prospectos que llegan por ahí quedan con el canal `TELEGRAM`. `GET /api/health` indica qué motor de preguntas usa y si Telegram está activo.
+
 ## Ejecutar en tu computadora
 
 Requisitos: JDK 21, Maven 3.9 y la base de datos creada (ver `base-datos/README.md`).

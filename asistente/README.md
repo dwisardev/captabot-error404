@@ -1,4 +1,4 @@
-# Asistente virtual – chat de CaptaBot + Azure AI Language
+# Asistente virtual – chat web, Telegram y Azure AI Language
 
 Responsable: Vladimir Angelino (@DeiosZ). Historias: HU01, HU02, HU04 y HU05 (SCRUM-12, 13, 15 y 16).
 
@@ -8,6 +8,8 @@ El asistente es gratuito de punta a punta:
   conversación está programada en la API (`api/.../chat/ConversacionService.java`) y sigue el diagrama
   `docs/diagramas/flujo-asistente.png`. Cuando el cliente deja sus datos, la API registra y califica al
   prospecto, y este aparece en el panel.
+- **Telegram**: el mismo asistente atiende en un bot de Telegram, con las opciones como botones y un botón
+  para compartir el celular. Los prospectos quedan con el canal `TELEGRAM` en el panel (ver sección 6).
 - **Las preguntas frecuentes** las responde **Azure AI Language** (función *custom question answering*,
   plan gratuito F0). Si Azure no está configurado o no responde, el chat usa su buscador local con las
   mismas respuestas, así la demo nunca se cae.
@@ -111,7 +113,7 @@ Después de cambiarlas, ejecuten `cargar-preguntas.py --reiniciar`.
 
 Y agreguen la dirección de esa página en la variable `CAPTABOT_CHAT_ORIGENES` de la API.
 
-## 5. Cómo responde el chat
+## 5. Cómo responde el chat (web y Telegram)
 
 | El cliente escribe | El chat |
 |---|---|
@@ -123,3 +125,29 @@ Y agreguen la dirección de esa página en la variable `CAPTABOT_CHAT_ORIGENES` 
 
 El chat es público (no pide la clave X-API-Key) porque lo usa el navegador del cliente; solo permite
 registrar prospectos siguiendo la conversación.
+
+## 6. Canal de Telegram (gratis)
+
+1. En Telegram, abran **@BotFather** y envíen `/newbot`. Elijan un nombre (por ejemplo «CaptaBot
+   Demo») y un usuario que termine en `bot` (por ejemplo `captabot_error404_bot`).
+2. BotFather responde con un **token**. Cópienlo en el archivo `.env`:
+
+   ```bash
+   TELEGRAM_BOT_TOKEN=123456789:AA...
+   ```
+
+   El token es como una contraseña: no lo compartan ni lo suban a GitHub.
+3. Reinicien con `docker compose up --build`. En `http://localhost:8080/api/health` debe decir
+   `"telegram": "activo"` y en el log de la API aparece «Bot de Telegram @… escuchando mensajes».
+4. Abran el bot en Telegram y toquen **Iniciar**. Prueben «Quiero cotizar» y, cuando pida el celular, el
+   botón **📱 Compartir mi número**. El prospecto aparece en el panel con el canal «Telegram».
+
+Opcional en @BotFather: `/setdescription` y `/setuserpic` para que el bot se vea profesional, y
+`/setcommands` con `start - Empezar de nuevo`.
+
+**Importante:** el bot recibe los mensajes preguntando a Telegram cada pocos segundos (long polling), así
+que funciona en una laptop sin dirección pública. Pero solo **una** copia de la API puede usar el mismo
+token a la vez: si dos integrantes levantan el sistema con el mismo token, uno de los dos no recibirá
+mensajes. Para probar por separado, que cada uno cree su propio bot de prueba.
+
+El bot solo responde en chats privados (no en grupos) y por ahora solo entiende mensajes de texto.

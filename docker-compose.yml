@@ -35,6 +35,8 @@ services:
       AZURE_LANGUAGE_ENDPOINT: ${AZURE_LANGUAGE_ENDPOINT:-}
       AZURE_LANGUAGE_KEY: ${AZURE_LANGUAGE_KEY:-}
       AZURE_LANGUAGE_PROYECTO: ${AZURE_LANGUAGE_PROYECTO:-}
+      # Canal de Telegram (opcional): token que entrega @BotFather
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
     ports:
       - "8080:8080"
     depends_on:

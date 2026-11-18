@@ -47,7 +47,7 @@ o el pull request y aparecerá en la tarea, por ejemplo:
 | Panel administrativo .NET 10 | Listo: inicio de sesión, prospectos, etapas, notas, usuarios y reportes con Excel |
 | Pruebas | JUnit en la API, xUnit en el panel y prueba de punta a punta en cada push |
 | Integración continua | GitHub Actions: BD, API, panel y prueba de punta a punta |
-| Asistente virtual | Listo: chat en la página web con preguntas frecuentes y captación de datos; Azure AI Language opcional (gratis) |
+| Asistente virtual | Listo: chat en la página web y bot de Telegram, con preguntas frecuentes y captación de datos; Azure AI Language opcional (gratis) |
 
 ## Cómo ejecutarlo en local
 
@@ -85,7 +85,7 @@ cd panel/CaptaBot.Panel && dotnet run
 ```
 
 Abran `http://localhost:5080` e inicien sesión con `admin@captabot.pe` / `Demo2026!`.
-La página web de la PYME con el chat queda en `http://localhost:8080`. Para conectar Azure AI Language, sigan `asistente/README.md`.
+La página web de la PYME con el chat queda en `http://localhost:8080`. Para conectar Azure AI Language y el bot de Telegram, sigan `asistente/README.md`.
 
 ## Integración continua
 

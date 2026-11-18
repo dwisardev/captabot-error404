@@ -60,6 +60,8 @@ Estado: **Auto** = automatizado y en verde en el CI · **Manual** = se prueba a 
 | HU05 | A06 | Escribir un celular inválido o un monto que no es número | Explica el formato y lo vuelve a pedir | Auto |
 | HU01 | A07 | Con Azure configurado, preguntar con otras palabras («¿abren los domingos?») | Responde Azure AI Language; `/api/health` indica `azure-ai-language` | Manual |
 | HU01 | A08 | Azure no responde o no está configurado | El chat responde con el buscador local | Auto |
+| HU02 | A09 | Conversación completa por Telegram, compartiendo el número con el botón | Muestra botones, registra al prospecto con canal TELEGRAM; ignora grupos y stickers | Auto (simulado) |
+| HU02 | A10 | Probar el bot real en Telegram con el token de @BotFather | Responde en Telegram y el prospecto aparece en el panel con canal «Telegram» | Manual |
 | HU06 | U01 | Inicio de sesión correcto | Entra al panel con su rol | Auto |
 | HU06 | U02 | Contraseña incorrecta | Mensaje «Correo o contraseña incorrectos» | Auto |
 | HU06 | U03 | Abrir cualquier página sin sesión | Redirige al inicio de sesión | Auto |
@@ -111,3 +113,4 @@ esperado, resultado obtenido y captura. La corrección se sube en un commit con 
 | Docker Compose | Correcto |
 | Asistente (A01 a A06, A08) | Automatizados con JUnit y en el CI |
 | A07 con Azure AI Language | Pendiente: crear el recurso gratuito en Azure |
+| A10 con el bot real de Telegram | Pendiente: crear el bot con @BotFather |
