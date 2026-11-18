@@ -1,0 +1,1428 @@
+{
+  "info": {
+    "_postman_id": "6f1d2c1e-3b1a-4c55-9f0e-404c47ab0001",
+    "name": "CaptaBot API – ERROR 404",
+    "description": "Prueba de integración de la API de CaptaBot (SCRUM-47). Ejecutar las carpetas en orden.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-Key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Asistente: registro y calificación (HU03, HU05)",
+      "description": "Simula lo que envía watsonx Assistant al terminar la conversación.",
+      "item": [
+        {
+          "name": "API en línea",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Indica que la API está activa\", () => pm.expect(pm.response.json().estado).to.eql(\"ok\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar prospecto caliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Postman Caliente\",\n  \"telefono\": \"987654321\",\n  \"servicioInteres\": \"Diseño web\",\n  \"presupuesto\": 6000,\n  \"urgencia\": \"alta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201 con la ubicación\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.response.to.have.header(\"Location\");",
+                  "});",
+                  "const r = pm.response.json();",
+                  "pm.test(\"S/ 6000 y urgencia alta = 100 puntos, CALIENTE\", () => {",
+                  "    pm.expect(r.puntaje).to.eql(100);",
+                  "    pm.expect(r.calificacion).to.eql(\"CALIENTE\");",
+                  "});",
+                  "pm.test(\"El mensaje saluda por el primer nombre\", () => pm.expect(r.mensaje).to.include(\"Gracias, Postman.\"));",
+                  "pm.collectionVariables.set(\"prospectoId\", r.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar prospecto tibio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Postman Tibio\",\n  \"telefono\": \"912345678\",\n  \"servicioInteres\": \"Marketing digital\",\n  \"presupuesto\": 2500,\n  \"urgencia\": \"Media\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"S/ 2500 y urgencia media = 65 puntos, TIBIO\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(pm.response.json().puntaje).to.eql(65);",
+                  "    pm.expect(pm.response.json().calificacion).to.eql(\"TIBIO\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar prospecto frío",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Postman Frío\",\n  \"telefono\": \"934567890\",\n  \"servicioInteres\": \"Soporte técnico\",\n  \"presupuesto\": 100,\n  \"urgencia\": \"BAJA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"S/ 100 y urgencia baja = 15 puntos, FRIO\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(pm.response.json().puntaje).to.eql(15);",
+                  "    pm.expect(pm.response.json().calificacion).to.eql(\"FRIO\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar teléfono inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Error\",\n  \"telefono\": \"12345\",\n  \"servicioInteres\": \"Web\",\n  \"presupuesto\": 100,\n  \"urgencia\": \"alta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400 con el detalle del teléfono\", () => {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.expect(pm.response.json().detalles.telefono).to.eql(\"El teléfono debe tener 9 dígitos\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar urgencia desconocida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Error\",\n  \"telefono\": \"987654321\",\n  \"servicioInteres\": \"Web\",\n  \"presupuesto\": 100,\n  \"urgencia\": \"mañana\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400 con un mensaje claro\", () => {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.expect(pm.response.json().error).to.eql(\"La urgencia debe ser ALTA, MEDIA o BAJA\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar solicitud sin clave de API",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Solo aplica si la API se inició con CAPTABOT_API_KEY.",
+                  "if (pm.environment.get(\"apiKey\")) {",
+                  "    pm.test(\"Responde 401\", () => pm.response.to.have.status(401));",
+                  "} else {",
+                  "    pm.test(\"La API no pide clave en este entorno\", () => pm.expect(pm.response.code).to.not.eql(401));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Inicio de sesión y usuarios (HU06, HU07)",
+      "description": "Operaciones que usa el panel administrativo.",
+      "item": [
+        {
+          "name": "Iniciar sesión como administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"contrasena\": \"{{adminContrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 con el rol\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().rol).to.eql(\"ADMINISTRADOR\");",
+                  "});",
+                  "pm.test(\"Nunca devuelve la contraseña\", () => {",
+                  "    pm.expect(pm.response.json()).to.not.have.property(\"contrasenaHash\");",
+                  "    pm.expect(pm.response.json()).to.not.have.property(\"contrasena\");",
+                  "});",
+                  "pm.collectionVariables.set(\"adminId\", pm.response.json().id);",
+                  "pm.collectionVariables.set(\"adminNombre\", pm.response.json().nombre);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar contraseña incorrecta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"contrasena\": \"clave-equivocada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401 sin decir qué dato falló\", () => {",
+                  "    pm.response.to.have.status(401);",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Correo o contraseña incorrectos\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear vendedor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Vendedor Postman\",\n  \"correo\": \"{{vendedorCorreoMayus}}\",\n  \"contrasena\": \"Segura2026\",\n  \"rol\": \"vendedor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const correo = \"vendedor.\" + Date.now() + \"@captabot.pe\";",
+                  "pm.collectionVariables.set(\"vendedorCorreo\", correo);",
+                  "pm.collectionVariables.set(\"vendedorCorreoMayus\", correo.toUpperCase());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201 como VENDEDOR activo\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(pm.response.json().rol).to.eql(\"VENDEDOR\");",
+                  "    pm.expect(pm.response.json().activo).to.be.true;",
+                  "});",
+                  "pm.test(\"Guarda el correo en minúsculas\", () =>",
+                  "    pm.expect(pm.response.json().correo).to.eql(pm.collectionVariables.get(\"vendedorCorreo\")));",
+                  "pm.collectionVariables.set(\"vendedorId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar correo repetido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Otro\",\n  \"correo\": \"{{vendedorCorreo}}\",\n  \"contrasena\": \"Segura2026\",\n  \"rol\": \"VENDEDOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar contraseña corta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Corta\",\n  \"correo\": \"corta.postman@captabot.pe\",\n  \"contrasena\": \"123\",\n  \"rol\": \"VENDEDOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400 indicando el mínimo\", () => {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.expect(pm.response.json().error).to.include(\"8 caracteres\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar vendedor sin cambiar su contraseña",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/{{vendedorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{vendedorId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Vendedor Postman Editado\",\n  \"correo\": \"{{vendedorCorreo}}\",\n  \"rol\": \"VENDEDOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 con el nombre nuevo\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().nombre).to.eql(\"Vendedor Postman Editado\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El vendedor inicia sesión con su contraseña original",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{vendedorCorreo}}\",\n  \"contrasena\": \"Segura2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Desactivar vendedor",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/{{vendedorId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{vendedorId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Queda desactivado\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().activo).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Un usuario desactivado no puede iniciar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{vendedorCorreo}}\",\n  \"contrasena\": \"Segura2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Lista, etapas y notas (HU08, HU09, HU10)",
+      "description": "Seguimiento comercial desde el panel.",
+      "item": [
+        {
+          "name": "Lista de calientes paginada",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos?calificacion=CALIENTE&pagina=0&tamano=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ],
+              "query": [
+                {
+                  "key": "calificacion",
+                  "value": "CALIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Responde 200 con páginas de 20\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(r.tamano).to.eql(20);",
+                  "    pm.expect(r.contenido.length).to.be.at.most(20);",
+                  "});",
+                  "pm.test(\"Solo trae calientes\", () => r.contenido.forEach(p => pm.expect(p.calificacion).to.eql(\"CALIENTE\")));",
+                  "pm.test(\"Ordenada de mayor a menor puntaje\", () => {",
+                  "    for (let i = 1; i < r.contenido.length; i++) {",
+                  "        pm.expect(r.contenido[i - 1].puntaje).to.be.at.least(r.contenido[i].puntaje);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar por rango de fechas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos?desde=2020-01-01&hasta=2099-12-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2020-01-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2099-12-31"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 e incluye el prospecto registrado\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().totalElementos).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar rango de fechas invertido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos?desde=2026-12-31&hasta=2026-01-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos"
+              ],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2026-12-31"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-01-01"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.expect(pm.response.json().error).to.include(\"fecha inicial\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar etapa a CONTACTADO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/{{prospectoId}}/etapa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "{{prospectoId}}",
+                "etapa"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"etapa\": \"contactado\",\n  \"usuarioId\": {{adminId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 con la etapa nueva\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().etapa).to.eql(\"CONTACTADO\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar el cambio a la misma etapa",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/{{prospectoId}}/etapa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "{{prospectoId}}",
+                "etapa"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"etapa\": \"CONTACTADO\",\n  \"usuarioId\": {{adminId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historial guarda quién y cuándo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/{{prospectoId}}/historial",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "{{prospectoId}}",
+                "historial"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const h = pm.response.json();",
+                  "pm.test(\"El último cambio es NUEVO → CONTACTADO\", () => {",
+                  "    pm.expect(h[0].etapaAnterior).to.eql(\"NUEVO\");",
+                  "    pm.expect(h[0].etapaNueva).to.eql(\"CONTACTADO\");",
+                  "});",
+                  "pm.test(\"Registra el usuario y la fecha\", () => {",
+                  "    pm.expect(h[0].usuario).to.eql(pm.collectionVariables.get(\"adminNombre\"));",
+                  "    pm.expect(h[0].cambiadoEn).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agregar nota",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/{{prospectoId}}/notas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "{{prospectoId}}",
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{adminId}},\n  \"contenido\": \"Pidió la cotización por correo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201 con autor y fecha\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(pm.response.json().autor).to.eql(pm.collectionVariables.get(\"adminNombre\"));",
+                  "    pm.expect(pm.response.json().creadoEn).to.be.a(\"string\");",
+                  "});",
+                  "pm.collectionVariables.set(\"notaId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agregar segunda nota",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/{{prospectoId}}/notas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "{{prospectoId}}",
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{adminId}},\n  \"contenido\": \"Envió el comprobante de pago\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Notas de la más reciente a la más antigua",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/{{prospectoId}}/notas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "{{prospectoId}}",
+                "notas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const n = pm.response.json();",
+                  "pm.test(\"La primera es la última que se agregó\", () => {",
+                  "    pm.expect(n[0].contenido).to.eql(\"Envió el comprobante de pago\");",
+                  "    pm.expect(n[1].contenido).to.eql(\"Pidió la cotización por correo\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El autor edita su nota",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/{{prospectoId}}/notas/{{notaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "{{prospectoId}}",
+                "notas",
+                "{{notaId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{adminId}},\n  \"contenido\": \"Pidió la cotización por correo y por WhatsApp\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 y marca la fecha de edición\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().editadoEn).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Otro usuario no puede editar la nota",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/{{prospectoId}}/notas/{{notaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "{{prospectoId}}",
+                "notas",
+                "{{notaId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{vendedorId}},\n  \"contenido\": \"Cambio ajeno\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => {",
+                  "    pm.response.to.have.status(403);",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Solo el autor puede editar la nota\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Reportes (HU11, HU12)",
+      "description": "Datos de los reportes del gerente.",
+      "item": [
+        {
+          "name": "Prospectos por semana",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reportes/semanal?semanas=8",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "semanal"
+              ],
+              "query": [
+                {
+                  "key": "semanas",
+                  "value": "8"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const s = pm.response.json();",
+                  "pm.test(\"Devuelve 8 semanas, incluidas las vacías\", () => pm.expect(s.length).to.eql(8));",
+                  "pm.test(\"Cada semana suma calientes, tibios y fríos\", () =>",
+                  "    s.forEach(x => pm.expect(x.calientes + x.tibios + x.frios).to.eql(x.total)));",
+                  "pm.test(\"La semana actual tiene los prospectos de esta prueba\", () => pm.expect(s[7].total).to.be.at.least(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Embudo por etapa",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reportes/embudo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "embudo"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const e = pm.response.json();",
+                  "pm.test(\"Devuelve las 5 etapas en orden\", () =>",
+                  "    pm.expect(e.map(x => x.etapa)).to.eql([\"NUEVO\", \"CONTACTADO\", \"COTIZADO\", \"CERRADO_GANADO\", \"CERRADO_PERDIDO\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tasa de conversión",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reportes/conversion?desde=2020-01-01&hasta=2099-12-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "conversion"
+              ],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2020-01-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2099-12-31"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const c = pm.response.json();",
+                  "pm.test(\"La tasa está entre 0 y 100\", () => {",
+                  "    pm.expect(c.tasaPorcentaje).to.be.within(0, 100);",
+                  "    pm.expect(c.ganados).to.be.at.most(c.totalProspectos);",
+                  "});",
+                  "pm.test(\"Coincide con ganados / total\", () => {",
+                  "    const esperada = c.totalProspectos === 0 ? 0 : Math.round(10000 * c.ganados / c.totalProspectos) / 100;",
+                  "    pm.expect(c.tasaPorcentaje).to.eql(esperada);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "prospectoId",
+      "value": ""
+    },
+    {
+      "key": "adminId",
+      "value": ""
+    },
+    {
+      "key": "adminNombre",
+      "value": ""
+    },
+    {
+      "key": "vendedorId",
+      "value": ""
+    },
+    {
+      "key": "vendedorCorreo",
+      "value": ""
+    },
+    {
+      "key": "vendedorCorreoMayus",
+      "value": ""
+    },
+    {
+      "key": "notaId",
+      "value": ""
+    }
+  ]
+}

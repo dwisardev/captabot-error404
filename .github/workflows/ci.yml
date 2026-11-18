@@ -218,6 +218,12 @@ jobs:
           curl -fs "$API/api/reportes/conversion?desde=2020-01-01&hasta=2099-12-31" -H "$H" | jq -e '.totalProspectos >= 11 and .ganados >= 1'
           echo "Usuarios, seguimiento y reportes verificados"
 
+      - name: Ejecutar la colección de Postman
+        run: |
+          npx --yes newman@6 run pruebas/postman/CaptaBot.postman_collection.json \
+            -e pruebas/postman/CaptaBot-local.postman_environment.json \
+            --env-var "baseUrl=$API" --env-var "apiKey=$CAPTABOT_API_KEY"
+
       - name: Iniciar el panel
         run: |
           dotnet build panel/CaptaBot.Panel/CaptaBot.Panel.csproj -c Release
