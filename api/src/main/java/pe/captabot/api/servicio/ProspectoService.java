@@ -38,6 +38,12 @@ public class ProspectoService {
     /** Registra el prospecto que llega del asistente y lo califica. */
     @Transactional
     public Prospecto registrar(ProspectoRequest solicitud) {
+        return registrar(solicitud, "CHAT_WEB");
+    }
+
+    /** Igual que registrar(solicitud), indicando el canal: CHAT_WEB o TELEGRAM. */
+    @Transactional
+    public Prospecto registrar(ProspectoRequest solicitud, String canal) {
         Urgencia urgencia = Urgencia.desdeTexto(solicitud.urgencia());
         ResultadoCalificacion resultado = calificacionService.calificar(solicitud.presupuesto(), urgencia);
 
@@ -50,6 +56,7 @@ public class ProspectoService {
         prospecto.setPuntaje(resultado.puntaje());
         prospecto.setCalificacion(resultado.calificacion());
         prospecto.setEtapa(Etapa.NUEVO);
+        prospecto.setCanal(canal == null || canal.isBlank() ? "CHAT_WEB" : canal);
         return repositorio.save(prospecto);
     }
 

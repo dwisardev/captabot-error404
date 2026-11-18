@@ -26,6 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class ConversacionService {
 
+    public static final String CANAL_WEB = "CHAT_WEB";
+    public static final String CANAL_TELEGRAM = "TELEGRAM";
+
     static final Duration EXPIRACION = Duration.ofMinutes(30);
     static final int MAXIMO_SESIONES = 5000;
 
@@ -58,12 +61,18 @@ public class ConversacionService {
         this.locales = locales;
     }
 
+    /** Mensaje del chat de la página web. */
     public RespuestaChat procesar(String sesionId, String texto) {
+        return procesar(sesionId, texto, CANAL_WEB);
+    }
+
+    /** Mensaje de cualquier canal (página web o Telegram). */
+    public RespuestaChat procesar(String sesionId, String texto, String canal) {
         limpiarVencidas();
         String entrada = texto == null ? "" : texto.trim().replaceAll("\\s+", " ");
         Conversacion c = sesionId == null ? null : sesiones.get(sesionId);
         if (c == null) {
-            c = nueva();
+            c = nueva(canal);
             if (entrada.isEmpty() || esSaludo(entrada)) {
                 return responder(c, List.of(SALUDO), MENU);
             }
@@ -200,7 +209,8 @@ public class ConversacionService {
             return responder(c, List.of("Elige una opción: Alta, Media o Baja."), URGENCIAS);
         }
         try {
-            prospectos.registrar(new ProspectoRequest(c.nombre, c.telefono, c.servicio, c.presupuesto, urgencia.name()));
+            prospectos.registrar(new ProspectoRequest(c.nombre, c.telefono, c.servicio, c.presupuesto, urgencia.name()),
+                    c.canal);
         } catch (RuntimeException ex) {
             log.error("No se pudo registrar el prospecto del chat", ex);
             return responder(c, List.of("No pudimos registrar tus datos en este momento. Inténtalo de nuevo en unos "
@@ -211,7 +221,7 @@ public class ConversacionService {
         c.reiniciarDatos();
         return new RespuestaChat(c.id, List.of("Gracias, " + nombre
                 + ". Registramos tus datos y un asesor te contactará pronto.", "¿Puedo ayudarte con algo más?"),
-                MENU, true);
+                MENU, true, false);
     }
 
     static Urgencia leerUrgencia(String entrada) {
@@ -247,10 +257,10 @@ public class ConversacionService {
     }
 
     private static RespuestaChat responder(Conversacion c, List<String> mensajes, List<String> opciones) {
-        return new RespuestaChat(c.id, mensajes, opciones, false);
+        return new RespuestaChat(c.id, mensajes, opciones, false, c.estado == EstadoConversacion.CELULAR);
     }
 
-    private Conversacion nueva() {
+    private Conversacion nueva(String canal) {
         if (sesiones.size() >= MAXIMO_SESIONES) {
             limpiarVencidas();
             if (sesiones.size() >= MAXIMO_SESIONES) {
@@ -260,7 +270,7 @@ public class ConversacionService {
                         .ifPresent(vieja -> sesiones.remove(vieja.id));
             }
         }
-        Conversacion c = new Conversacion(UUID.randomUUID().toString());
+        Conversacion c = new Conversacion(UUID.randomUUID().toString(), canal == null ? CANAL_WEB : canal);
         sesiones.put(c.id, c);
         return c;
     }

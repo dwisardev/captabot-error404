@@ -34,7 +34,7 @@ class ChatControllerTest {
     @Test
     void devuelveLosMensajesYLasOpciones() throws Exception {
         when(servicio.procesar(null, "hola"))
-                .thenReturn(new RespuestaChat("abc", List.of("¡Hola!"), List.of("Quiero cotizar"), false));
+                .thenReturn(new RespuestaChat("abc", List.of("¡Hola!"), List.of("Quiero cotizar"), false, false));
 
         mvc.perform(post("/api/chat/mensajes").contentType(MediaType.APPLICATION_JSON).content("{\"texto\":\"hola\"}"))
                 .andExpect(status().isOk())

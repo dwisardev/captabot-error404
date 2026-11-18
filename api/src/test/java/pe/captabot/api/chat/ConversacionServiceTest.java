@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,7 +52,7 @@ class ConversacionServiceTest {
         assertThat(fin.registrado()).isTrue();
         assertThat(fin.mensajes().get(0)).isEqualTo("Gracias, María. Registramos tus datos y un asesor te contactará pronto.");
         ArgumentCaptor<ProspectoRequest> datos = ArgumentCaptor.forClass(ProspectoRequest.class);
-        verify(prospectos).registrar(datos.capture());
+        verify(prospectos).registrar(datos.capture(), eq(ConversacionService.CANAL_WEB));
         assertThat(datos.getValue().nombre()).isEqualTo("maría quispe");
         assertThat(datos.getValue().telefono()).isEqualTo("987654321");
         assertThat(datos.getValue().servicioInteres()).isEqualTo("Diseño web");
@@ -77,7 +78,7 @@ class ConversacionServiceTest {
         RespuestaChat r = chat.procesar(s, "no");
 
         assertThat(r.mensajes().get(0)).contains("no guardaremos tus datos");
-        verify(prospectos, never()).registrar(any());
+        verify(prospectos, never()).registrar(any(), any());
     }
 
     @Test
@@ -129,7 +130,7 @@ class ConversacionServiceTest {
         RespuestaChat r = chat.procesar(s, "menú");
 
         assertThat(r.opciones()).isEqualTo(ConversacionService.MENU);
-        verify(prospectos, never()).registrar(any());
+        verify(prospectos, never()).registrar(any(), any());
     }
 
     @Test
@@ -146,6 +147,16 @@ class ConversacionServiceTest {
         assertThat(ConversacionService.leerUrgencia("Media: este mes")).hasToString("MEDIA");
         assertThat(ConversacionService.leerUrgencia("solo estoy averiguando")).hasToString("BAJA");
         assertThat(ConversacionService.leerUrgencia("cuando sea")).isNull();
+    }
+
+    @Test
+    void avisaCuandoEsperaElCelular() {
+        String s = chat.procesar(null, "").sesionId();
+        chat.procesar(s, "Quiero cotizar");
+        chat.procesar(s, "Sí");
+
+        assertThat(chat.procesar(s, "Ana").pideTelefono()).isTrue();
+        assertThat(chat.procesar(s, "987654321").pideTelefono()).isFalse();
     }
 
     private String llegarAlCelular() {

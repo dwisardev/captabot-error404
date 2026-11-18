@@ -7,6 +7,8 @@ import java.time.Instant;
 class Conversacion {
 
     final String id;
+    /** CHAT_WEB o TELEGRAM: se guarda en el prospecto para saber por dónde llegó. */
+    final String canal;
     EstadoConversacion estado = EstadoConversacion.MENU;
     String nombre;
     String telefono;
@@ -14,8 +16,9 @@ class Conversacion {
     BigDecimal presupuesto;
     Instant ultimaActividad = Instant.now();
 
-    Conversacion(String id) {
+    Conversacion(String id, String canal) {
         this.id = id;
+        this.canal = canal;
     }
 
     void reiniciarDatos() {
