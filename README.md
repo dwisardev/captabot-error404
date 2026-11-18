@@ -26,7 +26,7 @@ Proyecto Integrador – IES Cibertec. Tablero en Jira: proyecto SCRUM.
 | Said Oyola | @said5596 | Desarrollo | Base de datos y pruebas |
 | Vladimir Angelino | @DeiosZ | Desarrollo | Asistente watsonx y documentación |
 
-El archivo `.github/CODEOWNERS` asigna un responsable a cada carpeta.
+El archivo `.github/CODEOWNERS` indica el responsable de cada carpeta, quien revisa los pull requests que la modifican.
 
 ## Cómo trabajar con Jira
 

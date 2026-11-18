@@ -1,5 +1,6 @@
 # Responsables por carpeta – Equipo ERROR 404
-# GitHub pide la revisión del responsable cuando un pull request toca su carpeta.
+# Sirve como guía del equipo: en un repositorio privado con GitHub Free, GitHub no solicita
+# la revisión automáticamente; cada responsable revisa los pull requests de su carpeta.
 
 *                     @dwisardev
 /panel/               @dwisardev
