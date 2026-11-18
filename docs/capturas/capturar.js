@@ -20,7 +20,7 @@ const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 fs.mkdirSync(destino, { recursive: true });
 
 async function nuevaPagina(navegador) {
-    const pagina = await nuevaPagina(navegador);
+    const pagina = await navegador.newPage();
     const cdp = await pagina.createCDPSession();
     await cdp.send("Emulation.setLocaleOverride", { locale: "es-PE" });
     await pagina.setExtraHTTPHeaders({ "Accept-Language": "es-PE,es;q=0.9" });
