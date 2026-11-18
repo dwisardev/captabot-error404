@@ -106,8 +106,8 @@ esperado, resultado obtenido y captura. La corrección se sube en un commit con 
 
 | Prueba | Resultado |
 |---|---|
-| JUnit (API) | 102 pruebas, 0 fallos |
-| xUnit (panel) | 50 pruebas, 0 fallos |
+| JUnit (API) | 112 pruebas, 0 fallos |
+| xUnit (panel) | 53 pruebas, 0 fallos |
 | Postman / newman | 41 solicitudes, 55 verificaciones, 0 fallos |
 | Punta a punta (BD + API + panel) | Correcta |
 | Docker Compose | Correcto |
