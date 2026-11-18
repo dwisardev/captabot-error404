@@ -1,0 +1,141 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CaptaBot API",
+    "version": "0.1.0",
+    "description": "Extensión personalizada para watsonx Assistant. Registra al prospecto que conversa con el asistente y devuelve su calificación (CALIENTE, TIBIO o FRIO)."
+  },
+  "servers": [
+    {
+      "url": "https://REEMPLAZAR-CON-LA-URL-PUBLICA-DE-LA-API"
+    }
+  ],
+  "security": [
+    {
+      "claveApi": []
+    }
+  ],
+  "paths": {
+    "/api/prospectos": {
+      "post": {
+        "operationId": "registrarProspecto",
+        "summary": "Registrar prospecto",
+        "description": "Guarda los datos del prospecto, calcula su puntaje y lo califica.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProspectoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Prospecto registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la clave de API o es incorrecta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "claveApi": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "ProspectoRequest": {
+        "type": "object",
+        "required": ["nombre", "telefono", "servicioInteres", "presupuesto", "urgencia"],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre del prospecto",
+            "example": "María Quispe"
+          },
+          "telefono": {
+            "type": "string",
+            "description": "Celular de 9 dígitos",
+            "example": "987654321"
+          },
+          "servicioInteres": {
+            "type": "string",
+            "description": "Servicio que le interesa",
+            "example": "Diseño web"
+          },
+          "presupuesto": {
+            "type": "number",
+            "description": "Presupuesto aproximado en soles",
+            "example": 2500
+          },
+          "urgencia": {
+            "type": "string",
+            "description": "ALTA, MEDIA o BAJA",
+            "example": "ALTA"
+          }
+        }
+      },
+      "RegistroResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 11
+          },
+          "calificacion": {
+            "type": "string",
+            "example": "CALIENTE"
+          },
+          "puntaje": {
+            "type": "integer",
+            "example": 85
+          },
+          "mensaje": {
+            "type": "string",
+            "example": "Gracias, María. Registramos tus datos y un asesor te contactará pronto."
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Datos inválidos"
+          }
+        }
+      }
+    }
+  }
+}

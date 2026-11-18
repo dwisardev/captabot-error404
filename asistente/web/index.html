@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CaptaBot – Demo del asistente</title>
+  <style>
+    :root { --azul: #1f4e79; --texto: #1d2733; --suave: #5b6876; --fondo: #f5f7fa; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: var(--fondo); }
+    header { background: var(--azul); color: #fff; padding: 1.25rem 1.5rem; }
+    header h1 { margin: 0; font-size: 1.4rem; }
+    header p { margin: .25rem 0 0; opacity: .85; }
+    main { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+    h2 { font-size: 1.15rem; margin-top: 2rem; }
+    .servicios { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .tarjeta { background: #fff; border: 1px solid #dde3ea; border-radius: 10px; padding: 1rem 1.1rem; }
+    .tarjeta h3 { margin: 0 0 .35rem; font-size: 1rem; }
+    .tarjeta p { margin: 0; color: var(--suave); font-size: .95rem; }
+    .aviso { background: #fff4d6; border: 1px solid #e8c766; border-radius: 10px; padding: .9rem 1.1rem; margin-top: 2rem; }
+    .aviso code { background: #fbe9b0; padding: 0 .25rem; border-radius: 4px; }
+    footer { text-align: center; color: var(--suave); font-size: .85rem; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>[Nombre de la empresa]</h1>
+    <p>Diseño web, marketing digital y soporte técnico para tu negocio</p>
+  </header>
+
+  <main>
+    <p>¿Tienes dudas o quieres una cotización? Escríbele a nuestro asistente con el botón
+      de chat de la esquina inferior derecha. Te responde al instante y, si lo deseas,
+      un asesor te contacta.</p>
+
+    <h2>Nuestros servicios</h2>
+    <div class="servicios">
+      <div class="tarjeta"><h3>Diseño web</h3><p>Páginas web informativas y tiendas en línea adaptadas a celulares.</p></div>
+      <div class="tarjeta"><h3>Marketing digital</h3><p>Gestión de redes sociales y campañas para conseguir clientes.</p></div>
+      <div class="tarjeta"><h3>Soporte técnico</h3><p>Mantenimiento de equipos y redes para pequeñas empresas.</p></div>
+    </div>
+
+    <div class="aviso" id="aviso" hidden>
+      El chat todavía no está configurado. Reemplacen <code>integrationID</code>,
+      <code>region</code> y <code>serviceInstanceID</code> en este archivo con los datos de
+      <b>Integrations → Web chat → Embed</b> de watsonx Assistant (ver <code>asistente/README.md</code>).
+    </div>
+  </main>
+
+  <footer>CaptaBot · Equipo ERROR 404 · Proyecto Integrador – IES Cibertec</footer>
+
+  <script>
+    // Datos de la pestaña "Embed" del chat web en watsonx Assistant.
+    window.watsonAssistantChatOptions = {
+      integrationID: "REEMPLAZAR-INTEGRATION-ID",
+      region: "us-south",
+      serviceInstanceID: "REEMPLAZAR-SERVICE-INSTANCE-ID",
+      onLoad: async (instance) => { await instance.render(); }
+    };
+
+    if (window.watsonAssistantChatOptions.integrationID.startsWith("REEMPLAZAR")) {
+      document.getElementById("aviso").hidden = false;
+    } else {
+      setTimeout(function () {
+        const script = document.createElement("script");
+        script.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" +
+          (window.watsonAssistantChatOptions.clientVersion || "latest") +
+          "/WatsonAssistantChatEntry.js";
+        document.head.appendChild(script);
+      });
+    }
+  </script>
+</body>
+</html>
