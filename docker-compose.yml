@@ -1,0 +1,53 @@
+# CaptaBot completo con un solo comando:  docker compose up --build
+# Panel: http://localhost:5080  (admin@captabot.pe / Demo2026!)
+# API:   http://localhost:8080
+name: captabot
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: captabot
+      POSTGRES_PASSWORD: captabot
+      POSTGRES_DB: captabot
+    ports:
+      - "5433:5432"   # 5433 para no chocar con un PostgreSQL instalado en la computadora
+    volumes:
+      - datos:/var/lib/postgresql/data
+      # Se ejecutan en orden alfabético solo la primera vez (con el volumen vacío)
+      - ./base-datos/scripts/01_crear_esquema.sql:/docker-entrypoint-initdb.d/01_crear_esquema.sql:ro
+      - ./base-datos/scripts/02_vistas_reportes.sql:/docker-entrypoint-initdb.d/02_vistas_reportes.sql:ro
+      - ./base-datos/datos-prueba/01_datos_prueba.sql:/docker-entrypoint-initdb.d/03_datos_prueba.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U captabot -d captabot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build: ./api
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/captabot
+      DB_USER: captabot
+      DB_PASSWORD: captabot
+      CAPTABOT_API_KEY: ${CAPTABOT_API_KEY:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+
+  panel:
+    build: ./panel
+    environment:
+      CaptabotApi__UrlBase: http://api:8080
+      CaptabotApi__ClaveApi: ${CAPTABOT_API_KEY:-}
+    ports:
+      - "5080:8080"
+    depends_on:
+      - api
+    restart: on-failure
+
+volumes:
+  datos:

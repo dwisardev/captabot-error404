@@ -51,6 +51,21 @@ o el pull request y aparecerá en la tarea, por ejemplo:
 
 ## Cómo ejecutarlo en local
 
+### Opción 1: Docker (recomendada)
+
+Solo necesitan Docker. Desde la carpeta del repositorio:
+
+```bash
+docker compose up --build
+```
+
+La primera vez tarda unos minutos porque descarga las imágenes y compila. Luego abran
+`http://localhost:5080` e inicien sesión con `admin@captabot.pe` / `Demo2026!`. La API queda
+en `http://localhost:8080` y PostgreSQL en el puerto `5433`. Para apagar: `Ctrl+C` y
+`docker compose down` (agreguen `-v` para borrar la base y volver a cargar los datos de prueba).
+
+### Opción 2: instalando cada parte
+
 Requisitos: PostgreSQL 16, Java 21 con Maven y el SDK de .NET 10.
 
 ```bash

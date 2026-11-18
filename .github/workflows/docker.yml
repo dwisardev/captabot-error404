@@ -1,0 +1,53 @@
+# Verifica que el sistema completo se levante con Docker Compose.
+# Corre solo cuando cambian los archivos de Docker, las dependencias o la base de datos,
+# para no gastar minutos de GitHub Actions en cada push.
+name: Docker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docker-compose.yml
+      - api/Dockerfile
+      - panel/Dockerfile
+      - '**/.dockerignore'
+      - api/pom.xml
+      - 'panel/**/*.csproj'
+      - 'base-datos/**'
+      - .github/workflows/docker.yml
+  workflow_dispatch:
+
+jobs:
+  compose:
+    name: Docker Compose (BD + API + panel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Construir y levantar los contenedores
+        run: docker compose up -d --build
+
+      - name: Esperar a la API y al panel
+        run: |
+          for i in $(seq 1 90); do curl -fs http://localhost:8080/api/health && break; sleep 2; done
+          curl -fs http://localhost:8080/api/health
+          for i in $(seq 1 60); do curl -fs -o /dev/null http://localhost:5080/Cuenta/Login && break; sleep 2; done
+          curl -fs -o /dev/null http://localhost:5080/Cuenta/Login
+
+      - name: Probar el sistema levantado
+        run: |
+          set -e
+          curl -fs -X POST http://localhost:8080/api/auth/login -H 'Content-Type: application/json' \
+            -d '{"correo":"admin@captabot.pe","contrasena":"Demo2026!"}' | jq -e '.rol == "ADMINISTRADOR"'
+          curl -fs http://localhost:8080/api/prospectos | jq -e '.totalElementos == 10'
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5080/Prospectos)
+          test "$code" = "302"
+          echo "Docker Compose verificado"
+
+      - name: Mostrar los logs
+        if: always()
+        run: docker compose logs --no-color
+
+      - name: Apagar
+        if: always()
+        run: docker compose down -v
