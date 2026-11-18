@@ -65,9 +65,22 @@ jobs:
       - name: Compilar y ejecutar las pruebas
         run: mvn -B -ntp verify
 
+  panel:
+    name: Panel .NET (compilación y pruebas xUnit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Compilar y ejecutar las pruebas
+        run: dotnet test panel/CaptaBot.Panel.Tests/CaptaBot.Panel.Tests.csproj -c Release
+
   integracion:
-    name: Prueba de integración (API + PostgreSQL)
-    needs: [base-datos, api]
+    name: Prueba de integración (BD + API + panel)
+    needs: [base-datos, api, panel]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -93,6 +106,7 @@ jobs:
       DB_PASSWORD: captabot
       CAPTABOT_API_KEY: clave-de-prueba-ci
       API: http://localhost:8080
+      PANEL: http://localhost:5080
     steps:
       - uses: actions/checkout@v5
 
@@ -102,6 +116,10 @@ jobs:
           java-version: '21'
           cache: maven
           cache-dependency-path: api/pom.xml
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
 
       - name: Crear la base de datos
         run: |
@@ -151,6 +169,99 @@ jobs:
           curl -fs -H "X-API-Key: $CAPTABOT_API_KEY" "$API/api/prospectos?calificacion=CALIENTE" | grep -q 'Prueba CI'
           echo "Prueba de integración completada"
 
-      - name: Mostrar el log de la API
+      - name: Probar usuarios, seguimiento y reportes en la API
+        run: |
+          set -e
+          H="X-API-Key: $CAPTABOT_API_KEY"
+          J='Content-Type: application/json'
+
+          echo "1. Inicio de sesión del administrador de prueba"
+          curl -fs -X POST "$API/api/auth/login" -H "$H" -H "$J" \
+            -d '{"correo":"admin@captabot.pe","contrasena":"Demo2026!"}' | jq -e '.rol == "ADMINISTRADOR"'
+
+          echo "2. Contraseña incorrecta: 401"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/auth/login" -H "$H" -H "$J" \
+            -d '{"correo":"admin@captabot.pe","contrasena":"otra-clave"}')
+          test "$code" = "401"
+
+          echo "3. No se repiten correos: 409"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/usuarios" -H "$H" -H "$J" \
+            -d '{"nombre":"Otro","correo":"ADMIN@captabot.pe","contrasena":"Segura2026","rol":"VENDEDOR"}')
+          test "$code" = "409"
+
+          echo "4. Crear un vendedor y desactivarlo"
+          vendedor=$(curl -fs -X POST "$API/api/usuarios" -H "$H" -H "$J" \
+            -d '{"nombre":"Vendedor CI","correo":"vendedor.ci@captabot.pe","contrasena":"Segura2026","rol":"VENDEDOR"}' | jq -r '.id')
+          curl -fs -X PATCH "$API/api/usuarios/$vendedor/estado" -H "$H" -H "$J" -d '{"activo":false}' | jq -e '.activo == false'
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/auth/login" -H "$H" -H "$J" \
+            -d '{"correo":"vendedor.ci@captabot.pe","contrasena":"Segura2026"}')
+          test "$code" = "401"
+
+          echo "5. Lista paginada: calientes primero"
+          curl -fs "$API/api/prospectos?tamano=5" -H "$H" | jq -e '.tamano == 5 and .totalElementos >= 11 and .contenido[0].calificacion == "CALIENTE"'
+
+          echo "6. Cambio de etapa con historial"
+          id=$(psql -tAc "SELECT id FROM prospectos WHERE nombre = 'Prueba CI'")
+          curl -fs -X PATCH "$API/api/prospectos/$id/etapa" -H "$H" -H "$J" -d '{"etapa":"contactado","usuarioId":1}' | jq -e '.etapa == "CONTACTADO"'
+          curl -fs "$API/api/prospectos/$id/historial" -H "$H" | jq -e '.[0].etapaNueva == "CONTACTADO" and .[0].usuario != null'
+
+          echo "7. Notas: solo el autor puede editar"
+          nota=$(curl -fs -X POST "$API/api/prospectos/$id/notas" -H "$H" -H "$J" \
+            -d '{"usuarioId":1,"contenido":"Llamar el lunes"}' | jq -r '.id')
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT "$API/api/prospectos/$id/notas/$nota" -H "$H" -H "$J" \
+            -d '{"usuarioId":2,"contenido":"Cambio ajeno"}')
+          test "$code" = "403"
+
+          echo "8. Reportes"
+          curl -fs "$API/api/reportes/semanal" -H "$H" | jq -e 'length == 8'
+          curl -fs "$API/api/reportes/embudo" -H "$H" | jq -e 'length == 5'
+          curl -fs "$API/api/reportes/conversion?desde=2020-01-01&hasta=2099-12-31" -H "$H" | jq -e '.totalProspectos >= 11 and .ganados >= 1'
+          echo "Usuarios, seguimiento y reportes verificados"
+
+      - name: Iniciar el panel
+        run: |
+          dotnet build panel/CaptaBot.Panel/CaptaBot.Panel.csproj -c Release
+          cd panel/CaptaBot.Panel
+          CaptabotApi__UrlBase="$API" CaptabotApi__ClaveApi="$CAPTABOT_API_KEY" \
+            nohup dotnet bin/Release/net10.0/CaptaBot.Panel.dll --urls "$PANEL" > ../../panel.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fs -o /dev/null "$PANEL/Cuenta/Login" && exit 0
+            sleep 2
+          done
+          echo "El panel no respondió a tiempo"
+          exit 1
+
+      - name: Probar el panel de punta a punta
+        run: |
+          set -e
+          echo "1. Sin sesión, el panel redirige al inicio de sesión"
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$PANEL/Prospectos")
+          test "$code" = "302"
+
+          echo "2. Iniciar sesión con el administrador de prueba"
+          token=$(curl -fs -c sesion.txt -b sesion.txt "$PANEL/Cuenta/Login" \
+            | python3 -c 'import re,sys; print(re.search(r"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"", sys.stdin.read()).group(1))')
+          destino=$(curl -s -c sesion.txt -b sesion.txt -o /dev/null -w '%{http_code} %{redirect_url}' \
+            -X POST "$PANEL/Cuenta/Login" \
+            --data-urlencode 'Correo=admin@captabot.pe' --data-urlencode 'Contrasena=Demo2026!' \
+            --data-urlencode "__RequestVerificationToken=$token")
+          echo "$destino"
+          echo "$destino" | grep -q '^302 .*/Prospectos'
+
+          echo "3. La lista muestra los prospectos"
+          curl -fs -b sesion.txt "$PANEL/Prospectos" | grep -q 'Prueba CI'
+
+          echo "4. Reportes y descarga de Excel"
+          curl -fs -b sesion.txt "$PANEL/Reportes" | grep -q 'Tasa de conversión'
+          curl -fs -b sesion.txt -o reporte.xlsx "$PANEL/Reportes/Excel"
+          python3 -c "import zipfile; z = zipfile.ZipFile('reporte.xlsx'); assert 'xl/worksheets/sheet3.xml' in z.namelist()"
+
+          echo "5. El administrador ve la gestión de usuarios"
+          curl -fs -b sesion.txt "$PANEL/Usuarios" | grep -q 'vendedor.ci@captabot.pe'
+          echo "Panel verificado de punta a punta"
+
+      - name: Mostrar los logs
         if: always()
-        run: cat api.log || true
+        run: |
+          echo "=== API ==="; cat api.log || true
+          echo "=== Panel ==="; cat panel.log || true
