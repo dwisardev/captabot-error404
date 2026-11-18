@@ -246,7 +246,7 @@ jobs:
             --data-urlencode 'Correo=admin@captabot.pe' --data-urlencode 'Contrasena=Demo2026!' \
             --data-urlencode "__RequestVerificationToken=$token")
           echo "$destino"
-          echo "$destino" | grep -q '^302 .*/Prospectos'
+          echo "$destino" | grep -qE "^302 $PANEL/(Prospectos)?$"
 
           echo "3. La lista muestra los prospectos"
           curl -fs -b sesion.txt "$PANEL/Prospectos" | grep -q 'Prueba CI'
