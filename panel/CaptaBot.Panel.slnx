@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CaptaBot.Panel/CaptaBot.Panel.csproj" />
+  <Project Path="CaptaBot.Panel.Tests/CaptaBot.Panel.Tests.csproj" />
+</Solution>

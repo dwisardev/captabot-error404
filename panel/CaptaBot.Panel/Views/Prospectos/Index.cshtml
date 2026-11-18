@@ -1,0 +1,104 @@
+@model ProspectosViewModel
+@{
+    ViewData["Title"] = "Prospectos";
+    var f = Model.Filtro;
+    string? Iso(DateOnly? fecha) => fecha?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+}
+<div class="encabezado">
+    <h1>Prospectos</h1>
+    <p class="sutil">@Model.Resultado.TotalElementos registrados · los calientes aparecen primero</p>
+</div>
+
+<form method="get" asp-action="Index" class="filtros tarjeta">
+    <div>
+        <label for="calificacion">Calificación</label>
+        <select id="calificacion" name="calificacion">
+            <option value="">Todas</option>
+            @HtmlAyuda.Opciones(Etiquetas.Calificaciones, f.Calificacion)
+        </select>
+    </div>
+    <div>
+        <label for="etapa">Etapa</label>
+        <select id="etapa" name="etapa">
+            <option value="">Todas</option>
+            @HtmlAyuda.Opciones(Etiquetas.Etapas, f.Etapa)
+        </select>
+    </div>
+    <div>
+        <label for="desde">Desde</label>
+        <input id="desde" name="desde" type="date" value="@Iso(f.Desde)" />
+    </div>
+    <div>
+        <label for="hasta">Hasta</label>
+        <input id="hasta" name="hasta" type="date" value="@Iso(f.Hasta)" />
+    </div>
+    <div class="acciones-filtro">
+        <button type="submit" class="boton">Filtrar</button>
+        @if (f.TieneFiltros)
+        {
+            <a asp-action="Index" class="boton boton-claro">Limpiar</a>
+        }
+    </div>
+</form>
+
+<div asp-validation-summary="ModelOnly" class="aviso aviso-error"></div>
+
+@if (Model.Resultado.Contenido.Count == 0)
+{
+    <section class="tarjeta vacio">
+        <p>No hay prospectos con estos filtros.</p>
+    </section>
+}
+else
+{
+    <div class="tabla-contenedor tarjeta">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Servicio</th>
+                    <th>Calificación</th>
+                    <th>Etapa</th>
+                    <th>Registrado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Resultado.Contenido)
+                {
+                    <tr>
+                        <td><a asp-action="Detalle" asp-route-id="@p.Id" class="enlace-fuerte">@p.Nombre</a></td>
+                        <td><a href="tel:@p.Telefono">@p.Telefono</a></td>
+                        <td>@p.ServicioInteres</td>
+                        <td><span class="@Etiquetas.ClaseCalificacion(p.Calificacion)">@Etiquetas.TextoCalificacion(p.Calificacion) · @p.Puntaje</span></td>
+                        <td><span class="@Etiquetas.ClaseEtapa(p.Etapa)">@Etiquetas.TextoEtapa(p.Etapa)</span></td>
+                        <td>@Etiquetas.FechaHora(p.CreadoEn)</td>
+                        <td><a asp-action="Detalle" asp-route-id="@p.Id" class="boton boton-claro boton-chico">Ver</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Resultado.TotalPaginas > 1)
+    {
+        <nav class="paginacion" aria-label="Páginas">
+            @if (Model.HayAnterior)
+            {
+                <a class="boton boton-claro" asp-action="Index"
+                   asp-route-calificacion="@f.Calificacion" asp-route-etapa="@f.Etapa"
+                   asp-route-desde="@Iso(f.Desde)" asp-route-hasta="@Iso(f.Hasta)"
+                   asp-route-pagina="@(Model.PaginaActual - 1)">← Anterior</a>
+            }
+            <span>Página @Model.PaginaActual de @Model.Resultado.TotalPaginas</span>
+            @if (Model.HaySiguiente)
+            {
+                <a class="boton boton-claro" asp-action="Index"
+                   asp-route-calificacion="@f.Calificacion" asp-route-etapa="@f.Etapa"
+                   asp-route-desde="@Iso(f.Desde)" asp-route-hasta="@Iso(f.Hasta)"
+                   asp-route-pagina="@(Model.PaginaActual + 1)">Siguiente →</a>
+            }
+        </nav>
+    }
+}

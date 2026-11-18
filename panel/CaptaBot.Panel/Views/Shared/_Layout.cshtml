@@ -1,0 +1,47 @@
+@{
+    var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
+    var conSesion = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] · CaptaBot</title>
+    <link rel="stylesheet" href="~/css/sitio.css" asp-append-version="true" />
+</head>
+<body class="@(conSesion ? "" : "sin-sesion")">
+    @if (conSesion)
+    {
+        <header class="barra">
+            <a class="marca" asp-controller="Prospectos" asp-action="Index">CaptaBot</a>
+            <nav class="menu">
+                <a asp-controller="Prospectos" asp-action="Index" class="@(controlador == "Prospectos" ? "activo" : "")">Prospectos</a>
+                <a asp-controller="Reportes" asp-action="Index" class="@(controlador == "Reportes" ? "activo" : "")">Reportes</a>
+                @if (User.EsAdministrador())
+                {
+                    <a asp-controller="Usuarios" asp-action="Index" class="@(controlador == "Usuarios" ? "activo" : "")">Usuarios</a>
+                }
+            </nav>
+            <div class="sesion">
+                <span>@(User.Identity?.Name)</span>
+                <form asp-controller="Cuenta" asp-action="Salir" method="post">
+                    <button type="submit" class="boton boton-claro">Salir</button>
+                </form>
+            </div>
+        </header>
+    }
+    <main class="contenido">
+        @if (TempData["Exito"] is string exito)
+        {
+            <div class="aviso aviso-exito" role="status">@exito</div>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <div class="aviso aviso-error" role="alert">@error</div>
+        }
+        @RenderBody()
+    </main>
+    <footer class="pie">CaptaBot · Equipo ERROR 404 · Proyecto Integrador – IES Cibertec</footer>
+</body>
+</html>

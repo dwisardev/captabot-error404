@@ -1,0 +1,23 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar sesión";
+}
+<section class="login">
+    <div class="tarjeta">
+        <h1 class="marca-grande">CaptaBot</h1>
+        <p class="sutil">Panel del equipo de ventas</p>
+        <form asp-action="Login" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="aviso aviso-error"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+            <label asp-for="Correo"></label>
+            <input asp-for="Correo" type="email" autocomplete="username" autofocus />
+            <span asp-validation-for="Correo" class="error-campo"></span>
+
+            <label asp-for="Contrasena"></label>
+            <input asp-for="Contrasena" autocomplete="current-password" />
+            <span asp-validation-for="Contrasena" class="error-campo"></span>
+
+            <button type="submit" class="boton boton-ancho">Iniciar sesión</button>
+        </form>
+    </div>
+</section>

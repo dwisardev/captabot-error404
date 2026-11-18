@@ -1,0 +1,112 @@
+@model ProspectoDetalleViewModel
+@{
+    var p = Model.Prospecto;
+    ViewData["Title"] = p.Nombre;
+}
+<p><a asp-action="Index" class="volver">← Volver a la lista</a></p>
+
+<div class="encabezado">
+    <h1>@p.Nombre</h1>
+    <div class="chips">
+        <span class="@Etiquetas.ClaseCalificacion(p.Calificacion)">@Etiquetas.TextoCalificacion(p.Calificacion) · @p.Puntaje puntos</span>
+        <span class="@Etiquetas.ClaseEtapa(p.Etapa)">@Etiquetas.TextoEtapa(p.Etapa)</span>
+    </div>
+</div>
+
+<div class="rejilla">
+    <section class="tarjeta">
+        <h2>Datos del prospecto</h2>
+        <dl class="datos">
+            <dt>Teléfono</dt>
+            <dd>
+                <a href="tel:@p.Telefono">@p.Telefono</a> ·
+                <a href="@Etiquetas.WhatsApp(p.Telefono)" target="_blank" rel="noopener">WhatsApp</a>
+            </dd>
+            <dt>Servicio de interés</dt>
+            <dd>@p.ServicioInteres</dd>
+            <dt>Presupuesto</dt>
+            <dd>@Etiquetas.Soles(p.Presupuesto)</dd>
+            <dt>Urgencia</dt>
+            <dd>@(p.Urgencia switch { "ALTA" => "Alta", "MEDIA" => "Media", "BAJA" => "Baja", _ => p.Urgencia })</dd>
+            <dt>Canal</dt>
+            <dd>@(p.Canal == "CHAT_WEB" ? "Chat de la página web" : p.Canal)</dd>
+            <dt>Registrado</dt>
+            <dd>@Etiquetas.FechaHora(p.CreadoEn)</dd>
+        </dl>
+    </section>
+
+    <section class="tarjeta">
+        <h2>Etapa del seguimiento</h2>
+        <form asp-action="CambiarEtapa" asp-route-id="@p.Id" method="post" class="en-linea">
+            <label for="etapa" class="oculto">Nueva etapa</label>
+            <select id="etapa" name="etapa">
+                @HtmlAyuda.Opciones(Etiquetas.Etapas, p.Etapa)
+            </select>
+            <button type="submit" class="boton">Guardar etapa</button>
+        </form>
+
+        <h3>Historial</h3>
+        @if (Model.Historial.Count == 0)
+        {
+            <p class="sutil">Todavía no hay cambios de etapa.</p>
+        }
+        else
+        {
+            <ul class="linea-tiempo">
+                @foreach (var cambio in Model.Historial)
+                {
+                    <li>
+                        <strong>@Etiquetas.TextoEtapa(cambio.EtapaAnterior) → @Etiquetas.TextoEtapa(cambio.EtapaNueva)</strong>
+                        <span class="sutil">@Etiquetas.FechaHora(cambio.CambiadoEn) · @(cambio.Usuario ?? "Sistema")</span>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+</div>
+
+<section class="tarjeta">
+    <h2>Notas de seguimiento</h2>
+    <form asp-action="AgregarNota" asp-route-id="@p.Id" method="post" class="nueva-nota">
+        <label for="contenido" class="oculto">Nueva nota</label>
+        <textarea id="contenido" name="contenido" rows="3" maxlength="2000"
+                  placeholder="¿Qué se habló con el cliente? Ej.: pidió la cotización por correo"></textarea>
+        <button type="submit" class="boton">Agregar nota</button>
+    </form>
+
+    @if (Model.Notas.Count == 0)
+    {
+        <p class="sutil">Todavía no hay notas.</p>
+    }
+    else
+    {
+        <ul class="notas">
+            @foreach (var nota in Model.Notas)
+            {
+                <li class="nota">
+                    <div class="nota-cabecera">
+                        <strong>@nota.Autor</strong>
+                        <span class="sutil">
+                            @Etiquetas.FechaHora(nota.CreadoEn)
+                            @if (nota.EditadoEn is { } editada)
+                            {
+                                <text> · editada el @Etiquetas.FechaHora(editada)</text>
+                            }
+                        </span>
+                    </div>
+                    <p class="nota-texto">@nota.Contenido</p>
+                    @if (nota.AutorId == Model.UsuarioActualId)
+                    {
+                        <details>
+                            <summary>Editar</summary>
+                            <form asp-action="EditarNota" asp-route-id="@p.Id" asp-route-notaId="@nota.Id" method="post">
+                                <textarea name="contenido" rows="3" maxlength="2000">@nota.Contenido</textarea>
+                                <button type="submit" class="boton boton-chico">Guardar cambios</button>
+                            </form>
+                        </details>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>

@@ -1,0 +1,104 @@
+@model ReportesViewModel
+@{
+    ViewData["Title"] = "Reportes";
+    string? Iso(DateOnly? fecha) => fecha?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+    var periodo = CaptaBot.Panel.Controllers.ReportesController.DescribirPeriodo(Model.Desde, Model.Hasta);
+}
+<div class="encabezado">
+    <h1>Reportes</h1>
+    <div class="botones no-imprimir">
+        <a asp-action="Excel" asp-route-desde="@Iso(Model.Desde)" asp-route-hasta="@Iso(Model.Hasta)" class="boton">Descargar Excel</a>
+        <button type="button" class="boton boton-claro" onclick="window.print()">Imprimir o guardar PDF</button>
+    </div>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="aviso aviso-error"></div>
+
+<section class="tarjeta">
+    <div class="encabezado-seccion">
+        <h2>Prospectos por semana</h2>
+        <form method="get" asp-action="Index" class="en-linea no-imprimir">
+            <input type="hidden" name="desde" value="@Iso(Model.Desde)" />
+            <input type="hidden" name="hasta" value="@Iso(Model.Hasta)" />
+            <label for="vista">Ver</label>
+            <select id="vista" name="vista" onchange="this.form.submit()">
+                @(HtmlAyuda.Opciones(new[] { ("calificacion", "Por calificación"), ("total", "Solo el total") }, Model.PorCalificacion ? "calificacion" : "total"))
+            </select>
+        </form>
+    </div>
+    <p class="sutil">Últimas @Model.Semanas.Count semanas. Cada semana empieza el lunes.</p>
+
+    <div class="grafico-barras" role="img" aria-label="Gráfico de prospectos por semana">
+        @foreach (var s in Model.Semanas)
+        {
+            var max = Model.MaximoSemanal;
+            <div class="columna">
+                <span class="valor">@s.Total</span>
+                <div class="barra-apilada" style="height: @(ReportesViewModel.Porcentaje(s.Total, max))%">
+                    @if (Model.PorCalificacion)
+                    {
+                        if (s.Frios > 0) { <div class="segmento frio" style="flex: @s.Frios" title="Fríos: @s.Frios"></div> }
+                        if (s.Tibios > 0) { <div class="segmento tibio" style="flex: @s.Tibios" title="Tibios: @s.Tibios"></div> }
+                        if (s.Calientes > 0) { <div class="segmento caliente" style="flex: @s.Calientes" title="Calientes: @s.Calientes"></div> }
+                    }
+                    else if (s.Total > 0)
+                    {
+                        <div class="segmento total" style="flex: 1" title="Total: @s.Total"></div>
+                    }
+                </div>
+                <span class="etiqueta">@s.Semana.ToString("dd/MM", System.Globalization.CultureInfo.InvariantCulture)</span>
+            </div>
+        }
+    </div>
+    @if (Model.PorCalificacion)
+    {
+        <p class="leyenda">
+            <span><i class="punto caliente"></i>Calientes</span>
+            <span><i class="punto tibio"></i>Tibios</span>
+            <span><i class="punto frio"></i>Fríos</span>
+        </p>
+    }
+</section>
+
+<form method="get" asp-action="Index" class="filtros tarjeta no-imprimir">
+    <input type="hidden" name="vista" value="@(Model.PorCalificacion ? "calificacion" : "total")" />
+    <div>
+        <label for="desde">Desde</label>
+        <input id="desde" name="desde" type="date" value="@Iso(Model.Desde)" />
+    </div>
+    <div>
+        <label for="hasta">Hasta</label>
+        <input id="hasta" name="hasta" type="date" value="@Iso(Model.Hasta)" />
+    </div>
+    <div class="acciones-filtro">
+        <button type="submit" class="boton">Aplicar al embudo y la conversión</button>
+        @if (Model.Desde is not null || Model.Hasta is not null)
+        {
+            <a asp-action="Index" class="boton boton-claro">Quitar fechas</a>
+        }
+    </div>
+</form>
+
+<div class="rejilla">
+    <section class="tarjeta">
+        <h2>Tasa de conversión</h2>
+        <p class="sutil">@periodo</p>
+        <p class="cifra">@Model.Conversion.TasaPorcentaje.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) %</p>
+        <p>@Model.Conversion.Ganados de @Model.Conversion.TotalProspectos prospectos llegaron a «Cerrado – ganado».</p>
+    </section>
+
+    <section class="tarjeta">
+        <h2>Embudo de ventas</h2>
+        <p class="sutil">@periodo</p>
+        <ul class="embudo">
+            @foreach (var e in Model.Embudo)
+            {
+                <li>
+                    <span class="embudo-etapa">@Etiquetas.TextoEtapa(e.Etapa)</span>
+                    <span class="embudo-barra"><span style="width: @(ReportesViewModel.Porcentaje(e.Total, Model.MaximoEmbudo))%"></span></span>
+                    <span class="embudo-total">@e.Total</span>
+                </li>
+            }
+        </ul>
+    </section>
+</div>
