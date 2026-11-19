@@ -1970,6 +1970,156 @@
           ]
         }
       ]
+    },
+    {
+      "name": "6. Automatización y panel (HU13)",
+      "description": "Datos que usa el panel: indicadores, campana de prospectos nuevos y página Automatización.",
+      "item": [
+        {
+          "name": "Indicadores de la lista",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/resumen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "resumen"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Cuenta por canal y por calificación\", () => {",
+                  "    pm.expect(r.porCanal).to.have.all.keys(\"CHAT_WEB\", \"TELEGRAM\", \"WHATSAPP\");",
+                  "    pm.expect(r.porCalificacion).to.have.all.keys(\"CALIENTE\", \"TIBIO\", \"FRIO\");",
+                  "    pm.expect(r.total).to.be.at.least(1);",
+                  "    pm.expect(r.calientesSinContactar).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campana: último prospecto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/recientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "recientes"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Sin despuesDe solo devuelve el último id\", () => {",
+                  "    pm.expect(r.ultimoId).to.be.above(0);",
+                  "    pm.expect(r.prospectos).to.eql([]);",
+                  "});",
+                  "pm.collectionVariables.set(\"ultimoId\", r.ultimoId - 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campana: prospectos nuevos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prospectos/recientes?despuesDe={{ultimoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prospectos",
+                "recientes"
+              ],
+              "query": [
+                {
+                  "key": "despuesDe",
+                  "value": "{{ultimoId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Devuelve el más reciente con su automatización\", () => {",
+                  "    pm.expect(r.prospectos.length).to.eql(1);",
+                  "    pm.expect(r.prospectos[0]).to.have.property(\"avisoEnviadoEn\");",
+                  "    pm.expect(r.prospectos[0]).to.have.property(\"seguimientoClienteEn\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estado de la automatización",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/automatizacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "automatizacion"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Informa canales, tiempos y vendedores\", () => {",
+                  "    pm.expect(r).to.include.keys(\"telegram\", \"whatsapp\", \"avisosVendedores\", \"recordatorioMinutos\",",
+                  "        \"seguimientoClienteMinutos\", \"vendedores\", \"enviadosHoy\");",
+                  "    pm.expect(r.vendedores).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
@@ -2003,6 +2153,10 @@
     },
     {
       "key": "chatSesion",
+      "value": ""
+    },
+    {
+      "key": "ultimoId",
       "value": ""
     }
   ]

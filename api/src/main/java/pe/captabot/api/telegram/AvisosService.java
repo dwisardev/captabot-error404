@@ -18,6 +18,7 @@ import pe.captabot.api.modelo.Urgencia;
 import pe.captabot.api.repositorio.AvisoTelegramRepository;
 import pe.captabot.api.repositorio.ProspectoRepository;
 import pe.captabot.api.servicio.ProspectoRegistrado;
+import pe.captabot.api.whatsapp.WhatsAppApi;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
  * <ul>
  *   <li>Avisa al equipo de ventas apenas se registra un prospecto, con un botón para escribirle por WhatsApp.</li>
  *   <li>Recuerda al equipo los prospectos calientes o tibios que siguen en «Nuevo» después de un tiempo.</li>
- *   <li>Escribe al cliente que llegó por el bot de Telegram para darle seguimiento.</li>
+ *   <li>Escribe al cliente que llegó por Telegram o WhatsApp para darle seguimiento.</li>
  * </ul>
  * Los vendedores se vinculan escribiendo al bot «/vendedor CÓDIGO» (TELEGRAM_CODIGO_VENTAS).
  */
@@ -50,10 +51,17 @@ public class AvisosService implements DisposableBean {
     static final List<Etapa> CERRADAS = List.of(Etapa.CERRADO_GANADO, Etapa.CERRADO_PERDIDO);
     /** Solo se recuerdan y siguen prospectos recientes, para no avisar de registros antiguos. */
     static final Duration VENTANA = Duration.ofDays(2);
+    /**
+     * WhatsApp solo permite mensajes libres dentro de las 24 horas desde el último mensaje del cliente; pasado ese
+     * tiempo exige una plantilla aprobada (de pago). Por eso el seguimiento por WhatsApp se hace antes de 23 horas.
+     */
+    static final long LIMITE_WHATSAPP_MINUTOS = 23 * 60;
 
     private static final Logger log = LoggerFactory.getLogger(AvisosService.class);
+    private static final java.time.ZoneId LIMA = java.time.ZoneId.of("America/Lima");
 
     private final TelegramApi telegram;
+    private final WhatsAppApi whatsapp;
     private final AvisoTelegramRepository vendedores;
     private final ProspectoRepository prospectos;
     private final String codigo;
@@ -64,11 +72,12 @@ public class AvisosService implements DisposableBean {
     private final ExecutorService hiloPropio;
 
     @Autowired
-    public AvisosService(TelegramApi telegram, AvisoTelegramRepository vendedores, ProspectoRepository prospectos,
+    public AvisosService(TelegramApi telegram, WhatsAppApi whatsapp, AvisoTelegramRepository vendedores,
+                         ProspectoRepository prospectos,
                          @Value("${captabot.avisos.codigo:}") String codigo,
                          @Value("${captabot.avisos.recordatorio-minutos:120}") String minutosRecordatorio,
                          @Value("${captabot.avisos.seguimiento-minutos:1440}") String minutosSeguimiento) {
-        this(telegram, vendedores, prospectos, codigo, minutos(minutosRecordatorio, 120),
+        this(telegram, whatsapp, vendedores, prospectos, codigo, minutos(minutosRecordatorio, 120),
                 minutos(minutosSeguimiento, 1440), Clock.systemDefaultZone(), null);
     }
 
@@ -82,9 +91,11 @@ public class AvisosService implements DisposableBean {
     }
 
     /** Para las pruebas: reloj fijo y envíos en el mismo hilo. */
-    AvisosService(TelegramApi telegram, AvisoTelegramRepository vendedores, ProspectoRepository prospectos,
-                  String codigo, long minutosRecordatorio, long minutosSeguimiento, Clock reloj, Executor envios) {
+    AvisosService(TelegramApi telegram, WhatsAppApi whatsapp, AvisoTelegramRepository vendedores,
+                  ProspectoRepository prospectos, String codigo, long minutosRecordatorio, long minutosSeguimiento,
+                  Clock reloj, Executor envios) {
         this.telegram = telegram;
+        this.whatsapp = whatsapp;
         this.vendedores = vendedores;
         this.prospectos = prospectos;
         this.codigo = codigo == null ? "" : codigo.trim();
@@ -129,6 +140,39 @@ public class AvisosService implements DisposableBean {
         return minutosSeguimiento;
     }
 
+    public boolean codigoConfigurado() {
+        return !codigo.isEmpty();
+    }
+
+    /** El seguimiento por WhatsApp solo es posible (gratis) dentro de la ventana de 24 horas. */
+    public boolean seguimientoWhatsappDisponible() {
+        return minutosSeguimiento < LIMITE_WHATSAPP_MINUTOS;
+    }
+
+    /** Vendedores que reciben los avisos, para la página «Automatización» del panel. */
+    public List<AvisoTelegram> vendedores() {
+        return vendedores.findAll();
+    }
+
+    /** El administrador quita a un vendedor desde el panel. */
+    @Transactional
+    public boolean quitarVendedor(long chatId) {
+        if (!vendedores.existsById(chatId)) {
+            return false;
+        }
+        vendedores.deleteById(chatId);
+        return true;
+    }
+
+    /** Cuántos avisos, recordatorios y seguimientos se enviaron hoy (hora de Lima). */
+    public Map<String, Long> enviadosHoy() {
+        OffsetDateTime inicio = OffsetDateTime.now(reloj).atZoneSameInstant(LIMA).toLocalDate()
+                .atStartOfDay(LIMA).toOffsetDateTime();
+        return Map.of("avisos", prospectos.avisosDesde(inicio),
+                "recordatorios", prospectos.recordatoriosDesde(inicio),
+                "seguimientos", prospectos.seguimientosDesde(inicio));
+    }
+
     // ------------------------------------------------------------------ vínculo de los vendedores
 
     /** Comando «/vendedor CÓDIGO» del bot: el chat empieza a recibir los avisos de ventas. */
@@ -171,18 +215,23 @@ public class AvisosService implements DisposableBean {
         if (!telegram.estaConfigurado()) {
             return;
         }
-        enviarAVendedores(vendedores.findAll(), textoNuevo(prospecto), botonWhatsApp(prospecto));
+        if (enviarAVendedores(vendedores.findAll(), textoNuevo(prospecto), botonWhatsApp(prospecto)) > 0
+                && prospecto.getId() != null) {
+            prospectos.marcarAvisoEnviado(prospecto.getId(), OffsetDateTime.now(reloj));
+        }
     }
 
     // ------------------------------------------------------------------ 2 y 3. revisión periódica
 
     @Scheduled(fixedDelayString = "${captabot.avisos.revision-ms:60000}", initialDelay = 30_000)
     public void revisar() {
-        if (!telegram.estaConfigurado()) {
+        if (!telegram.estaConfigurado() && !whatsapp.estaConfigurado()) {
             return;
         }
         try {
-            recordarPendientes();
+            if (telegram.estaConfigurado()) {
+                recordarPendientes();
+            }
             seguirClientes();
         } catch (RuntimeException ex) {
             log.warn("No se pudieron revisar los avisos pendientes: {}", telegram.ocultar(ex.getMessage()));
@@ -199,37 +248,49 @@ public class AvisosService implements DisposableBean {
         OffsetDateTime hasta = ahora.minusMinutes(minutosRecordatorio);
         for (Prospecto p : prospectos.pendientesDeRecordatorio(Etapa.NUEVO, A_RECORDAR, hasta.minus(VENTANA), hasta)) {
             enviarAVendedores(lista, textoRecordatorio(p, ahora), botonWhatsApp(p));
-            p.setRecordatorioEn(ahora);
-            prospectos.save(p);
+            prospectos.marcarRecordatorio(p.getId(), ahora);
         }
     }
 
-    /** Escribe una sola vez al cliente que llegó por Telegram, si su venta sigue abierta. */
+    /** Escribe una sola vez al cliente que llegó por Telegram o WhatsApp, si su venta sigue abierta. */
     void seguirClientes() {
         OffsetDateTime ahora = OffsetDateTime.now(reloj);
         OffsetDateTime hasta = ahora.minusMinutes(minutosSeguimiento);
         for (Prospecto p : prospectos.pendientesDeSeguimiento(CERRADAS, hasta.minus(VENTANA), hasta)) {
+            boolean porTelegram = p.getTelegramChatId() != null && telegram.estaConfigurado();
+            boolean porWhatsapp = p.getTelegramChatId() == null && p.getWhatsappId() != null
+                    && whatsapp.estaConfigurado() && seguimientoWhatsappDisponible();
+            if (!porTelegram && !porWhatsapp) {
+                continue;
+            }
             try {
-                telegram.enviar(p.getTelegramChatId(), textoSeguimiento(p), tecladoMenu());
+                if (porTelegram) {
+                    telegram.enviar(p.getTelegramChatId(), textoSeguimiento(p), tecladoMenu());
+                } else {
+                    whatsapp.enviar(p.getWhatsappId(), textoSeguimiento(p), ConversacionService.MENU);
+                }
             } catch (RuntimeException ex) {
                 log.warn("No se pudo enviar el seguimiento al prospecto {}: {}", p.getId(),
                         telegram.ocultar(ex.getMessage()));
             }
             // Se marca aunque falle (por ejemplo, si el cliente bloqueó el bot), para no insistir.
-            p.setSeguimientoClienteEn(ahora);
-            prospectos.save(p);
+            prospectos.marcarSeguimiento(p.getId(), ahora);
         }
     }
 
-    private void enviarAVendedores(List<AvisoTelegram> lista, String texto, Map<String, Object> teclado) {
+    /** Devuelve a cuántos vendedores les llegó. */
+    private int enviarAVendedores(List<AvisoTelegram> lista, String texto, Map<String, Object> teclado) {
+        int enviados = 0;
         for (AvisoTelegram vendedor : lista) {
             try {
                 telegram.enviar(vendedor.getChatId(), texto, teclado);
+                enviados++;
             } catch (RuntimeException ex) {
                 log.warn("No se pudo avisar a {} por Telegram: {}", vendedor.getNombre(),
                         telegram.ocultar(ex.getMessage()));
             }
         }
+        return enviados;
     }
 
     // ------------------------------------------------------------------ textos
@@ -332,6 +393,9 @@ public class AvisosService implements DisposableBean {
     }
 
     private static String canal(String canal) {
-        return ConversacionService.CANAL_TELEGRAM.equals(canal) ? "Telegram" : "Chat web";
+        if (ConversacionService.CANAL_TELEGRAM.equals(canal)) {
+            return "Telegram";
+        }
+        return ConversacionService.CANAL_WHATSAPP.equals(canal) ? "WhatsApp" : "Chat web";
     }
 }

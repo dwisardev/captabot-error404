@@ -62,6 +62,14 @@ public class Prospecto {
     @Column(name = "telegram_chat_id")
     private Long telegramChatId;
 
+    /** Número de WhatsApp del cliente (con código de país), si llegó por WhatsApp. */
+    @Column(name = "whatsapp_id", length = 20)
+    private String whatsappId;
+
+    /** Cuándo se avisó del prospecto al equipo de ventas por Telegram (HU13). */
+    @Column(name = "aviso_enviado_en")
+    private OffsetDateTime avisoEnviadoEn;
+
     /** Cuándo se recordó al equipo que seguía sin contactar (HU13). */
     @Column(name = "recordatorio_en")
     private OffsetDateTime recordatorioEn;
@@ -115,6 +123,12 @@ public class Prospecto {
 
     public Long getTelegramChatId() { return telegramChatId; }
     public void setTelegramChatId(Long telegramChatId) { this.telegramChatId = telegramChatId; }
+
+    public String getWhatsappId() { return whatsappId; }
+    public void setWhatsappId(String whatsappId) { this.whatsappId = whatsappId; }
+
+    public OffsetDateTime getAvisoEnviadoEn() { return avisoEnviadoEn; }
+    public void setAvisoEnviadoEn(OffsetDateTime avisoEnviadoEn) { this.avisoEnviadoEn = avisoEnviadoEn; }
 
     public OffsetDateTime getRecordatorioEn() { return recordatorioEn; }
     public void setRecordatorioEn(OffsetDateTime recordatorioEn) { this.recordatorioEn = recordatorioEn; }

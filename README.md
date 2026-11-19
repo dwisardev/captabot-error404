@@ -48,7 +48,8 @@ o el pull request y aparecerá en la tarea, por ejemplo:
 | Pruebas | JUnit en la API, xUnit en el panel y prueba de punta a punta en cada push |
 | Integración continua | GitHub Actions: BD, API, panel y prueba de punta a punta |
 | Asistente virtual | Listo: chat en la página web y bot de Telegram, con preguntas frecuentes y captación de datos; Azure AI Language opcional (gratis) |
-| Automatización (HU13) | Listo: avisos de prospectos nuevos al Telegram de los vendedores, recordatorios de los que siguen sin contactar y seguimiento al cliente de Telegram |
+| Automatización (HU13) | Listo: avisos de prospectos nuevos al Telegram de los vendedores, recordatorios de los que siguen sin contactar y seguimiento al cliente de Telegram o WhatsApp |
+| Canal de WhatsApp | Listo: mismo flujo del asistente por WhatsApp con el número de prueba gratis de Meta (guía en `asistente/README.md`, sección 8) |
 
 ## Cómo ejecutarlo en local
 

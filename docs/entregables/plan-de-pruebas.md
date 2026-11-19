@@ -16,6 +16,7 @@ Comprobar que CaptaBot cumple los criterios de aceptación de las 13 historias d
 | API Java (Spring Boot) | Reglas de negocio, validaciones, seguridad con clave, respuestas HTTP | Carga y estrés |
 | Panel .NET | Inicio de sesión, permisos, pantallas, filtros, exportación a Excel | Compatibilidad con navegadores antiguos |
 | Asistente (chat + Azure AI Language) | Preguntas frecuentes, captación de datos, validaciones y registro del prospecto | Calidad de las respuestas de Azure fuera de las frases cargadas |
+| Canal de WhatsApp | Webhook (verificación y firma), conversación, botones y listas, con WhatsApp simulado | Entrega real de Meta (se prueba a mano, W06) |
 | Automatización por Telegram (HU13) | Vínculo de vendedores, avisos, recordatorios y seguimiento, con un Telegram simulado | Entrega real de Telegram (se prueba a mano, N07) |
 
 ## 3. Tipos de prueba y herramientas
@@ -98,6 +99,14 @@ Estado: **Auto** = automatizado y en verde en el CI · **Manual** = se prueba a 
 | HU13 | N05 | Cliente de Telegram con la venta abierta pasado el tiempo | El bot le escribe una sola vez con el menú | Auto |
 | HU13 | N06 | La API lee el .env de la raíz y muestra la automatización en /api/health | Tiempos del .env; avisos apagados sin token | Auto (CI) |
 | HU13 | N07 | Demostración real con tiempos cortos (1 y 2 minutos) | Aviso, recordatorio y seguimiento llegan al celular | Manual |
+| HU13 | N08 | Seguimiento por WhatsApp antes y después de 23 horas | Se envía solo dentro de la ventana gratuita de 24 horas | Auto |
+| HU13 | N09 | Datos del panel: indicadores, campana de nuevos y página Automatización | /api/prospectos/resumen, /api/prospectos/recientes y /api/automatizacion responden con sus datos | Auto (CI) |
+| HU02 | W01 | Meta verifica el webhook con el token correcto e incorrecto | Devuelve el reto o 403 | Auto |
+| HU02 | W02 | Notificación con firma válida, incorrecta o sin firma | 200 o 401 | Auto |
+| HU02 | W03 | Conversación completa por WhatsApp con botones, lista y «Usar este número» | Prospecto con canal WHATSAPP, su celular y su número de WhatsApp | Auto (JUnit y CI) |
+| HU02 | W04 | Meta reenvía el mismo mensaje | Se atiende una sola vez | Auto |
+| HU02 | W05 | Imagen o audio | Responde que solo entiende texto | Auto |
+| HU02 | W06 | Bot real con el número de prueba y ngrok | Responde en WhatsApp y el prospecto aparece en el panel | Manual |
 
 ## 6. Criterios de aceptación de una entrega
 
@@ -123,5 +132,7 @@ esperado, resultado obtenido y captura. La corrección se sube en un commit con 
 | Asistente (A01 a A06, A08 a A11) | Automatizados con JUnit y en el CI |
 | A07 con Azure AI Language | Pendiente: crear el recurso gratuito en Azure |
 | A10 con el bot real de Telegram | Pendiente: crear el bot con @BotFather |
-| Automatización (N01 a N06) | Automatizados con JUnit y en el CI |
+| Automatización (N01 a N06, N08 y N09) | Automatizados con JUnit y en el CI |
+| WhatsApp (W01 a W05) | Automatizados con JUnit y con un webhook simulado en el CI |
+| W06 con el número de prueba de Meta | Pendiente: crear la app en Meta y el túnel |
 | N07 demostración real | Pendiente: probar con el bot real y tiempos cortos |

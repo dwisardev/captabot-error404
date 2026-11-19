@@ -12,6 +12,8 @@ import pe.captabot.api.modelo.Urgencia;
 import pe.captabot.api.repositorio.AvisoTelegramRepository;
 import pe.captabot.api.repositorio.ProspectoRepository;
 import pe.captabot.api.servicio.ProspectoRegistrado;
+import pe.captabot.api.chat.ConversacionService;
+import pe.captabot.api.whatsapp.WhatsAppApi;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -36,6 +38,7 @@ class AvisosServiceTest {
     private static final OffsetDateTime AHORA = OffsetDateTime.now(RELOJ);
 
     private TelegramBotTest.TelegramFalso telegram;
+    private WhatsAppApi whatsapp;
     private AvisoTelegramRepository vendedores;
     private ProspectoRepository prospectos;
     private AvisosService avisos;
@@ -43,13 +46,19 @@ class AvisosServiceTest {
     @BeforeEach
     void preparar() {
         telegram = new TelegramBotTest.TelegramFalso();
+        whatsapp = mock(WhatsAppApi.class);
         vendedores = mock(AvisoTelegramRepository.class);
         prospectos = mock(ProspectoRepository.class);
         avisos = crear(telegram, "clave-123");
     }
 
     private AvisosService crear(TelegramApi api, String codigo) {
-        return new AvisosService(api, vendedores, prospectos, codigo, 120, 1440, RELOJ, Runnable::run);
+        return crear(api, codigo, 1440);
+    }
+
+    private AvisosService crear(TelegramApi api, String codigo, long minutosSeguimiento) {
+        return new AvisosService(api, whatsapp, vendedores, prospectos, codigo, 120, minutosSeguimiento, RELOJ,
+                Runnable::run);
     }
 
     private static Prospecto prospecto(String nombre, Calificacion calificacion, int puntaje, int minutosAtras) {
@@ -119,6 +128,17 @@ class AvisosServiceTest {
         assertThat(telegram.ultimo().texto()).startsWith("🔥 Nuevo prospecto caliente (85 puntos)")
                 .contains("Valeria Ríos", "945 123 678", "S/ 3,500.00", "alta (esta semana)", "Chat web");
         assertThat(telegram.ultimo().teclado().toString()).contains("https://wa.me/51945123678");
+        verify(prospectos).marcarAvisoEnviado(5L, AHORA);
+    }
+
+    @Test
+    void sinVendedoresNoMarcaElAviso() {
+        when(vendedores.findAll()).thenReturn(List.of());
+
+        avisos.alRegistrar(new ProspectoRegistrado(prospecto("Ana", Calificacion.CALIENTE, 85, 0)));
+
+        assertThat(telegram.enviados).isEmpty();
+        verify(prospectos, never()).marcarAvisoEnviado(any(), any());
     }
 
     @Test
@@ -146,8 +166,7 @@ class AvisosServiceTest {
         assertThat(telegram.ultimo().chatId()).isEqualTo(9L);
         assertThat(telegram.ultimo().texto()).startsWith("⏰ Recordatorio: Valeria Ríos (caliente, 85 puntos)")
                 .contains("desde hace 2 h 30 min");
-        assertThat(pendiente.getRecordatorioEn()).isEqualTo(AHORA);
-        verify(prospectos).save(pendiente);
+        verify(prospectos).marcarRecordatorio(5L, AHORA);
     }
 
     @Test
@@ -176,8 +195,45 @@ class AvisosServiceTest {
         assertThat(telegram.ultimo().chatId()).isEqualTo(77L);
         assertThat(telegram.ultimo().texto()).startsWith("Hola, Rosa 👋").contains("Diseño web", "945 123 678");
         assertThat(telegram.ultimo().teclado().toString()).contains("Quiero cotizar");
-        assertThat(cliente.getSeguimientoClienteEn()).isEqualTo(AHORA);
-        verify(prospectos).save(eq(cliente));
+        verify(prospectos).marcarSeguimiento(5L, AHORA);
+        verify(whatsapp, never()).enviar(any(), any(), any());
+    }
+
+    @Test
+    void escribeAlClienteQueLlegoPorWhatsappDentroDeLas24Horas() {
+        AvisosService rapido = crear(telegram, "clave-123", 2);
+        Prospecto cliente = prospecto("rosa vega", Calificacion.TIBIO, 65, 3);
+        cliente.setCanal("WHATSAPP");
+        cliente.setWhatsappId("51955777888");
+        when(whatsapp.estaConfigurado()).thenReturn(true);
+        OffsetDateTime hasta = AHORA.minusMinutes(2);
+        when(prospectos.pendientesDeSeguimiento(AvisosService.CERRADAS, hasta.minus(AvisosService.VENTANA), hasta))
+                .thenReturn(List.of(cliente));
+
+        rapido.seguirClientes();
+
+        ArgumentCaptor<String> texto = ArgumentCaptor.forClass(String.class);
+        verify(whatsapp).enviar(eq("51955777888"), texto.capture(), eq(ConversacionService.MENU));
+        assertThat(texto.getValue()).startsWith("Hola, Rosa 👋");
+        verify(prospectos).marcarSeguimiento(5L, AHORA);
+        assertThat(telegram.enviados).isEmpty();
+    }
+
+    @Test
+    void porWhatsappNoSigueDespuesDe23HorasPorqueRequierePlantillaDePago() {
+        Prospecto cliente = prospecto("rosa vega", Calificacion.TIBIO, 65, 1500);
+        cliente.setCanal("WHATSAPP");
+        cliente.setWhatsappId("51955777888");
+        when(whatsapp.estaConfigurado()).thenReturn(true);
+        OffsetDateTime hasta = AHORA.minusMinutes(1440);
+        when(prospectos.pendientesDeSeguimiento(AvisosService.CERRADAS, hasta.minus(AvisosService.VENTANA), hasta))
+                .thenReturn(List.of(cliente));
+
+        avisos.seguirClientes();
+
+        assertThat(avisos.seguimientoWhatsappDisponible()).isFalse();
+        verify(whatsapp, never()).enviar(any(), any(), any());
+        verify(prospectos, never()).marcarSeguimiento(any(), any());
     }
 
     // ------------------------------------------------------------------ textos

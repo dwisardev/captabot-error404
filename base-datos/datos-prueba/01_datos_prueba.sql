@@ -29,6 +29,10 @@ VALUES
     ('Sofía Vargas',     '989012345', 'Capacitación en Excel',     3000.00, 'ALTA',   85, 'CALIENTE', 'NUEVO',        NULL, NOW() - INTERVAL '1 day'),
     ('Diego Salazar',    '917654320', 'Marketing en redes',         800.00, 'BAJA',   30, 'FRIO',     'NUEVO',        NULL, NOW());
 
+-- Canal por el que llegó cada uno (el resto, por el chat de la página web)
+UPDATE prospectos SET canal = 'TELEGRAM' WHERE nombre IN ('Jorge Ramírez', 'Sofía Vargas');
+UPDATE prospectos SET canal = 'WHATSAPP' WHERE nombre IN ('Pedro Castillo', 'Luis Paredes');
+
 INSERT INTO historial_etapas (prospecto_id, etapa_anterior, etapa_nueva, usuario_id, cambiado_en) VALUES
     (1, 'NUEVO',      'CONTACTADO',      2, NOW() - INTERVAL '19 days'),
     (1, 'CONTACTADO', 'COTIZADO',        2, NOW() - INTERVAL '17 days'),

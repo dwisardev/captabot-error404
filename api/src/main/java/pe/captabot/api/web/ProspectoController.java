@@ -18,6 +18,7 @@ import pe.captabot.api.servicio.ProspectoService;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/prospectos")
@@ -61,5 +62,22 @@ public class ProspectoController {
     @GetMapping("/{id}")
     public ProspectoResponse obtener(@PathVariable Long id) {
         return ProspectoResponse.desde(servicio.obtener(id));
+    }
+
+    /** Indicadores de la lista del panel: por canal, por calificación, calientes sin contactar y nuevos de hoy. */
+    @GetMapping("/resumen")
+    public ProspectoService.ResumenProspectos resumen() {
+        return servicio.resumen();
+    }
+
+    /**
+     * Campana del panel. Sin despuesDe devuelve solo el último id; con despuesDe, los prospectos registrados
+     * después (hasta 20, del más nuevo al más antiguo).
+     */
+    @GetMapping("/recientes")
+    public Map<String, Object> recientes(@RequestParam(required = false) Long despuesDe) {
+        ProspectoService.Recientes recientes = servicio.recientes(despuesDe);
+        return Map.of("ultimoId", recientes.ultimoId(),
+                "prospectos", recientes.prospectos().stream().map(ProspectoResponse::desde).toList());
     }
 }

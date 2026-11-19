@@ -18,7 +18,11 @@ public record ProspectoResponse(
         String etapa,
         String canal,
         Long vendedorId,
-        OffsetDateTime creadoEn
+        OffsetDateTime creadoEn,
+        // Automatización (HU13): cuándo se avisó al equipo, se recordó y se escribió al cliente
+        OffsetDateTime avisoEnviadoEn,
+        OffsetDateTime recordatorioEn,
+        OffsetDateTime seguimientoClienteEn
 ) {
 
     public static ProspectoResponse desde(Prospecto p) {
@@ -34,6 +38,9 @@ public record ProspectoResponse(
                 p.getEtapa().name(),
                 p.getCanal(),
                 p.getVendedorId(),
-                p.getCreadoEn());
+                p.getCreadoEn(),
+                p.getAvisoEnviadoEn(),
+                p.getRecordatorioEn(),
+                p.getSeguimientoClienteEn());
     }
 }

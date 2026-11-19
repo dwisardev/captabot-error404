@@ -141,7 +141,7 @@ jobs:
       - name: Iniciar la API
         run: |
           # Igual que en una laptop: la API lee el archivo .env de la raíz del proyecto
-          printf 'CAPTABOT_RECORDATORIO_MINUTOS=7\nTELEGRAM_CODIGO_VENTAS=codigo-ci\n' > .env
+          printf 'CAPTABOT_RECORDATORIO_MINUTOS=7\nTELEGRAM_CODIGO_VENTAS=codigo-ci\nWHATSAPP_VERIFY_TOKEN=verificacion-ci\nWHATSAPP_APP_SECRET=secreto-ci\n' > .env
           nohup java -jar api/target/captabot-api.jar > api.log 2>&1 &
           for i in $(seq 1 60); do
             curl -fs "$API/api/health" && exit 0
@@ -159,6 +159,11 @@ jobs:
           echo "$estado" | jq -e '.automatizacion.recordatorioMinutos == 7 and .automatizacion.seguimientoClienteMinutos == 1440'
           echo "2. Sin token de Telegram, los avisos quedan apagados y no hay vendedores vinculados"
           echo "$estado" | jq -e '.telegram == "apagado" and .automatizacion.avisosVendedores == "apagado" and .automatizacion.vendedoresVinculados == 0'
+          echo "3. La página Automatización del panel tiene sus datos"
+          curl -fs -H "X-API-Key: $CAPTABOT_API_KEY" "$API/api/automatizacion" | tee /dev/stderr \
+            | jq -e '.whatsappWebhook == "activo" and .whatsapp == "apagado" and .codigoConfigurado == true and (.vendedores | length) == 0 and .enviadosHoy.avisos == 0'
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE -H "X-API-Key: $CAPTABOT_API_KEY" "$API/api/automatizacion/vendedores/123")
+          test "$code" = "404"
 
       - name: Probar el flujo asistente → API → base de datos
         run: |
@@ -265,6 +270,63 @@ jobs:
           echo "$r" | jq -e '.registrado == true'
           test "$(psql -tAc "SELECT telefono || '/' || calificacion || '/' || puntaje FROM prospectos WHERE nombre = 'Chat CI'")" = "987111222/TIBIO/65"
           echo "Chat del asistente verificado"
+
+      - name: Probar el canal de WhatsApp (webhook simulado) y los datos del panel
+        run: |
+          set -e
+          H="X-API-Key: $CAPTABOT_API_KEY"
+          echo "1. Meta verifica el webhook con el token"
+          test "$(curl -fs "$API/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=verificacion-ci&hub.challenge=4321")" = "4321"
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$API/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=otro&hub.challenge=1")
+          test "$code" = "403"
+
+          ultimo=$(curl -fs -H "$H" "$API/api/prospectos/recientes" | jq '.ultimoId')
+          echo "Último prospecto antes de WhatsApp: $ultimo"
+
+          # Envía al webhook un mensaje como lo haría Meta, firmado con el secreto de la app
+          wa() {
+            cuerpo=$(jq -cn --arg id "$1" --argjson m "$2" \
+              '{object:"whatsapp_business_account",entry:[{id:"1",changes:[{field:"messages",value:{messaging_product:"whatsapp",contacts:[{wa_id:"51955777888",profile:{name:"Cliente WA"}}],messages:[($m + {from:"51955777888",id:$id,timestamp:"1"})]}}]}]}')
+            firma=$(printf '%s' "$cuerpo" | openssl dgst -sha256 -hmac secreto-ci | sed 's/^.*= //')
+            curl -fs -o /dev/null -X POST "$API/api/whatsapp/webhook" -H 'Content-Type: application/json' \
+              -H "X-Hub-Signature-256: sha256=$firma" --data-binary "$cuerpo"
+          }
+          echo "2. Una firma incorrecta se rechaza"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/whatsapp/webhook" \
+            -H 'Content-Type: application/json' -H 'X-Hub-Signature-256: sha256=00' -d '{"entry":[]}')
+          test "$code" = "401"
+
+          echo "3. Conversación completa por WhatsApp"
+          wa wa1 '{"type":"text","text":{"body":"Quiero cotizar"}}'
+          wa wa2 '{"type":"text","text":{"body":"Sí, acepto"}}'
+          wa wa3 '{"type":"text","text":{"body":"Cliente WhatsApp CI"}}'
+          wa wa4 '{"type":"interactive","interactive":{"type":"button_reply","button_reply":{"id":"op:0","title":"Usar este número"}}}'
+          wa wa5 '{"type":"text","text":{"body":"Marketing digital"}}'
+          wa wa6 '{"type":"text","text":{"body":"S/ 2,500"}}'
+          wa wa7 '{"type":"interactive","interactive":{"type":"list_reply","list_reply":{"id":"op:1","title":"Media: este mes"}}}'
+          wa wa8 '{"type":"interactive","interactive":{"type":"button_reply","button_reply":{"id":"op:0","title":"Sí, registrar"}}}'
+          wa wa8 '{"type":"interactive","interactive":{"type":"button_reply","button_reply":{"id":"op:0","title":"Sí, registrar"}}}'
+          r=""
+          for i in $(seq 1 20); do
+            r=$(psql -tAc "SELECT canal || '/' || telefono || '/' || whatsapp_id || '/' || calificacion FROM prospectos WHERE nombre = 'Cliente WhatsApp CI'")
+            [ -n "$r" ] && break
+            sleep 1
+          done
+          echo "$r"
+          test "$r" = "WHATSAPP/955777888/51955777888/TIBIO"
+          echo "4. Meta reenvía el mismo mensaje: no se registra dos veces"
+          sleep 2
+          test "$(psql -tAc "SELECT count(*) FROM prospectos WHERE nombre = 'Cliente WhatsApp CI'")" = "1"
+
+          echo "5. La campana del panel recibe el prospecto nuevo con su automatización"
+          curl -fs -H "$H" "$API/api/prospectos/recientes?despuesDe=$ultimo" | tee /dev/stderr \
+            | jq -e '.prospectos | map(.nombre) | index("Cliente WhatsApp CI") != null'
+          curl -fs -H "$H" "$API/api/prospectos/recientes?despuesDe=$ultimo" \
+            | jq -e '.prospectos[0] | has("avisoEnviadoEn") and has("recordatorioEn") and has("seguimientoClienteEn")'
+
+          echo "6. Indicadores de la lista"
+          curl -fs -H "$H" "$API/api/prospectos/resumen" | tee /dev/stderr \
+            | jq -e '.porCanal.WHATSAPP >= 3 and .porCanal.TELEGRAM >= 2 and .total >= 11 and (.porCalificacion | keys | length) == 3'
 
       - name: Ejecutar la colección de Postman
         run: |

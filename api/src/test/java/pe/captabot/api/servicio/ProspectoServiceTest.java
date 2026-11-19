@@ -76,11 +76,54 @@ class ProspectoServiceTest {
         ProspectoRequest solicitud = new ProspectoRequest(
                 "Rosa Vega", "987654321", "Diseño web", new BigDecimal("3000"), "media");
 
-        Prospecto registrado = servicio.registrar(solicitud, "TELEGRAM", 77L);
+        Prospecto registrado = servicio.registrar(solicitud, "TELEGRAM", "77");
 
         assertThat(registrado.getCanal()).isEqualTo("TELEGRAM");
         assertThat(registrado.getTelegramChatId()).isEqualTo(77L);
+        assertThat(registrado.getWhatsappId()).isNull();
         assertThat(eventos).hasSize(1);
+    }
+
+    @Test
+    void guardaElNumeroDeWhatsappDelCliente() {
+        when(repositorio.save(any(Prospecto.class))).thenAnswer(inv -> inv.getArgument(0));
+        ProspectoRequest solicitud = new ProspectoRequest(
+                "Rosa Vega", "955777888", "Diseño web", new BigDecimal("3000"), "media");
+
+        Prospecto registrado = servicio.registrar(solicitud, "WHATSAPP", "51955777888");
+
+        assertThat(registrado.getCanal()).isEqualTo("WHATSAPP");
+        assertThat(registrado.getWhatsappId()).isEqualTo("51955777888");
+        assertThat(registrado.getTelegramChatId()).isNull();
+    }
+
+    @Test
+    void resumenCuentaPorCanalYCalificacionConCerosParaLosQueFaltan() {
+        when(repositorio.contarPorCanal()).thenReturn(List.of(new Object[]{"CHAT_WEB", 7L}, new Object[]{"WHATSAPP", 2L}));
+        when(repositorio.contarPorCalificacion()).thenReturn(List.of(new Object[]{Calificacion.CALIENTE, 4L},
+                new Object[]{Calificacion.FRIO, 5L}));
+        when(repositorio.countByCalificacionAndEtapa(Calificacion.CALIENTE, Etapa.NUEVO)).thenReturn(1L);
+        when(repositorio.countByCreadoEnGreaterThanEqual(any())).thenReturn(3L);
+
+        ProspectoService.ResumenProspectos resumen = servicio.resumen();
+
+        assertThat(resumen.total()).isEqualTo(9);
+        assertThat(resumen.porCanal()).containsExactly(java.util.Map.entry("CHAT_WEB", 7L),
+                java.util.Map.entry("TELEGRAM", 0L), java.util.Map.entry("WHATSAPP", 2L));
+        assertThat(resumen.porCalificacion()).containsEntry("TIBIO", 0L).containsEntry("CALIENTE", 4L);
+        assertThat(resumen.calientesSinContactar()).isEqualTo(1);
+        assertThat(resumen.nuevosHoy()).isEqualTo(3);
+    }
+
+    @Test
+    void recientesSinReferenciaSoloDevuelveElUltimoId() {
+        when(repositorio.ultimoId()).thenReturn(42L);
+
+        ProspectoService.Recientes recientes = servicio.recientes(null);
+
+        assertThat(recientes.ultimoId()).isEqualTo(42L);
+        assertThat(recientes.prospectos()).isEmpty();
+        verify(repositorio, never()).findTop20ByIdGreaterThanOrderByIdDesc(any());
     }
 
     @Test

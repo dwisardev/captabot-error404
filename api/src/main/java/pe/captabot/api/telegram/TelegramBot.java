@@ -111,7 +111,8 @@ public class TelegramBot implements DisposableBean {
             sesion = null;
             texto = "";
         }
-        RespuestaChat respuesta = conversaciones.procesar(sesion, texto, ConversacionService.CANAL_TELEGRAM, chatId);
+        RespuestaChat respuesta = conversaciones.procesar(sesion, texto, ConversacionService.CANAL_TELEGRAM,
+                String.valueOf(chatId));
         sesiones.put(chatId, respuesta.sesionId());
         List<String> mensajes = respuesta.mensajes();
         for (int i = 0; i < mensajes.size(); i++) {

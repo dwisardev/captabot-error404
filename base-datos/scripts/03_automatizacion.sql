@@ -1,5 +1,5 @@
 -- =============================================================================
--- CaptaBot – Automatización (HU13): avisos por Telegram y seguimiento
+-- CaptaBot – Automatización (HU13): avisos por Telegram, canal de WhatsApp y seguimiento
 -- Se ejecuta después de 01_crear_esquema.sql y 02_vistas_reportes.sql.
 -- Se puede volver a ejecutar sin errores en una base que ya existe.
 -- =============================================================================
@@ -16,10 +16,14 @@ COMMENT ON TABLE avisos_telegram IS 'Chats de Telegram del equipo de ventas que 
 
 -- Datos del prospecto que usa la automatización
 ALTER TABLE prospectos ADD COLUMN IF NOT EXISTS telegram_chat_id       BIGINT;
+ALTER TABLE prospectos ADD COLUMN IF NOT EXISTS whatsapp_id            VARCHAR(20);
+ALTER TABLE prospectos ADD COLUMN IF NOT EXISTS aviso_enviado_en       TIMESTAMPTZ;
 ALTER TABLE prospectos ADD COLUMN IF NOT EXISTS recordatorio_en        TIMESTAMPTZ;
 ALTER TABLE prospectos ADD COLUMN IF NOT EXISTS seguimiento_cliente_en TIMESTAMPTZ;
 
 COMMENT ON COLUMN prospectos.telegram_chat_id IS 'Chat de Telegram del cliente, si llegó por el bot (para el seguimiento)';
+COMMENT ON COLUMN prospectos.whatsapp_id IS 'Número de WhatsApp del cliente (con código de país), si llegó por WhatsApp';
+COMMENT ON COLUMN prospectos.aviso_enviado_en IS 'Cuándo se avisó del nuevo prospecto al equipo de ventas por Telegram';
 COMMENT ON COLUMN prospectos.recordatorio_en IS 'Cuándo se recordó al equipo que el prospecto seguía sin contactar';
 COMMENT ON COLUMN prospectos.seguimiento_cliente_en IS 'Cuándo el bot envió el mensaje de seguimiento al cliente';
 

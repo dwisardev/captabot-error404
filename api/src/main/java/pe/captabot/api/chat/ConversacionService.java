@@ -29,6 +29,7 @@ public class ConversacionService {
 
     public static final String CANAL_WEB = "CHAT_WEB";
     public static final String CANAL_TELEGRAM = "TELEGRAM";
+    public static final String CANAL_WHATSAPP = "WHATSAPP";
 
     static final Duration EXPIRACION = Duration.ofMinutes(30);
     static final int MAXIMO_SESIONES = 5000;
@@ -73,14 +74,17 @@ public class ConversacionService {
         return procesar(sesionId, texto, canal, null);
     }
 
-    /** Mensaje del bot de Telegram: guarda el chat del cliente para el seguimiento automático (HU13). */
-    public RespuestaChat procesar(String sesionId, String texto, String canal, Long telegramChatId) {
+    /**
+     * Mensaje de Telegram o WhatsApp: contacto es el chat de Telegram o el número de WhatsApp del cliente, que se
+     * guarda en el prospecto para el seguimiento automático (HU13).
+     */
+    public RespuestaChat procesar(String sesionId, String texto, String canal, String contacto) {
         limpiarVencidas();
         String entrada = texto == null ? "" : texto.trim().replaceAll("\\s+", " ");
         Conversacion c = sesionId == null ? null : sesiones.get(sesionId);
         if (c == null) {
             c = nueva(canal);
-            c.telegramChatId = telegramChatId;
+            c.contacto = contacto;
             if (entrada.isEmpty() || esSaludo(entrada)) {
                 return responder(c, List.of(SALUDO), MENU);
             }
@@ -240,7 +244,7 @@ public class ConversacionService {
         }
         try {
             prospectos.registrar(new ProspectoRequest(c.nombre, c.telefono, c.servicio, c.presupuesto,
-                    c.urgencia.name()), c.canal, c.telegramChatId);
+                    c.urgencia.name()), c.canal, c.contacto);
         } catch (RuntimeException ex) {
             log.error("No se pudo registrar el prospecto del chat", ex);
             return responder(c, List.of("No pudimos registrar tus datos en este momento. Inténtalo de nuevo en unos "

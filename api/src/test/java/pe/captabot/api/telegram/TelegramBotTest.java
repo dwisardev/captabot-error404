@@ -96,7 +96,7 @@ class TelegramBotTest {
         bot.atender(texto(77, "Sí, registrar"));
 
         ArgumentCaptor<ProspectoRequest> datos = ArgumentCaptor.forClass(ProspectoRequest.class);
-        verify(prospectos).registrar(datos.capture(), eq(ConversacionService.CANAL_TELEGRAM), eq(77L));
+        verify(prospectos).registrar(datos.capture(), eq(ConversacionService.CANAL_TELEGRAM), eq("77"));
         assertThat(datos.getValue().telefono()).isEqualTo("987654321");
         assertThat(datos.getValue().nombre()).isEqualTo("Rosa Vega");
         assertThat(telegram.enviados.get(telegram.enviados.size() - 2).texto())

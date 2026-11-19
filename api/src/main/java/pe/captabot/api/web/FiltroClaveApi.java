@@ -14,7 +14,7 @@ import java.security.MessageDigest;
 
 /**
  * Exige la cabecera X-API-Key en /api/** cuando captabot.api-key tiene valor. Quedan libres /api/health y
- * /api/chat/**, que usa el navegador del cliente. El panel y las integraciones envían la clave.
+ * /api/chat/**, que usa el navegador del cliente, y /api/whatsapp/**, que valida la firma de Meta. El panel y las integraciones envían la clave.
  */
 @Component
 public class FiltroClaveApi extends OncePerRequestFilter {
@@ -33,7 +33,8 @@ public class FiltroClaveApi extends OncePerRequestFilter {
         return claveEsperada.length == 0
                 || !ruta.startsWith("/api/")
                 || ruta.equals("/api/health")
-                || ruta.startsWith("/api/chat/");
+                || ruta.startsWith("/api/chat/")
+                || ruta.startsWith("/api/whatsapp/");
     }
 
     @Override

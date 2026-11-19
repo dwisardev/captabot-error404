@@ -193,3 +193,57 @@ Pongan tiempos cortos en el `.env` (por ejemplo `CAPTABOT_RECORDATORIO_MINUTOS=1
 
 La revisión de pendientes corre cada minuto. Si Telegram no está configurado, nada de esto se activa y el
 resto del sistema funciona igual.
+
+## 8. Canal de WhatsApp (número de prueba de Meta, gratis)
+
+El cliente conversa con CaptaBot por WhatsApp con el mismo flujo de la página web y Telegram: las opciones
+salen como botones o como lista y, cuando pide el celular, basta tocar **📱 Usar este número**. El prospecto
+llega al panel con el canal «WhatsApp» y el aviso al equipo de ventas llega por Telegram (sección 7).
+
+### Costos
+
+| Opción | Costo |
+|---|---|
+| Número de prueba de Meta (para el curso) | Gratis; solo puede conversar con hasta 5 celulares que registren |
+| Número real de la empresa | Desde el 1 de octubre de 2026, las respuestas se cobran después de 1 000 gratis al mes por número; los mensajes que inicia la empresa (plantillas) siempre se cobran |
+
+WhatsApp solo permite escribir libremente al cliente dentro de las 24 horas desde su último mensaje. Por eso
+el seguimiento automático por WhatsApp solo se envía si `CAPTABOT_SEGUIMIENTO_MINUTOS` es menor que 1380
+(23 horas); con el valor por defecto (1440) no se envía y queda para el vendedor.
+
+### Activarlo
+
+1. En **developers.facebook.com** creen una app de tipo empresa y agréguenle el producto **WhatsApp**. En
+   **Configuración de la API** Meta les da un número de prueba, su **Phone number ID** y un **token de acceso
+   temporal** (dura 24 horas).
+2. En esa misma pantalla agreguen como destinatarios los celulares del equipo (hasta 5); a cada uno le llega
+   un código para confirmarlo.
+3. Completen el `.env`:
+
+   ```bash
+   WHATSAPP_TOKEN=EAAG...            # token de acceso
+   WHATSAPP_PHONE_NUMBER_ID=1234...  # Phone number ID (no es el número de teléfono)
+   WHATSAPP_VERIFY_TOKEN=captabot-wa # lo inventan ustedes
+   WHATSAPP_APP_SECRET=abcd...       # Configuración de la app → Básica → Clave secreta
+   ```
+
+4. Abran un túnel para que Meta llegue a su laptop. Con **ngrok** (gratis, con un dominio fijo por cuenta):
+
+   ```bash
+   sudo snap install ngrok
+   ngrok config add-authtoken SU_TOKEN_DE_NGROK
+   ngrok http 8080
+   ```
+
+   ngrok muestra una dirección como `https://algo.ngrok-free.dev`, que no cambia entre reinicios.
+5. En Meta, en **WhatsApp → Configuración → Webhook**, pongan la URL
+   `https://algo.ngrok-free.dev/api/whatsapp/webhook` y el mismo `WHATSAPP_VERIFY_TOKEN`; toquen
+   **Verificar y guardar** y suscríbanse al campo **messages**.
+6. Reinicien la API. En `/api/health` debe decir `"whatsapp": "activo"`. Desde un celular registrado,
+   escriban «Hola» al número de prueba.
+
+El token temporal vence cada 24 horas: si deja de responder, generen uno nuevo y actualicen el `.env`. Para
+no renovarlo, se puede crear un usuario del sistema con token permanente en el administrador comercial de Meta.
+
+**Seguridad:** el webhook no pide la clave de la API porque lo llama Meta, pero solo acepta mensajes con la
+firma de Meta (`WHATSAPP_APP_SECRET`). Sin `WHATSAPP_VERIFY_TOKEN`, el webhook queda apagado.

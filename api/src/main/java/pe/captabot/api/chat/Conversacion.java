@@ -11,8 +11,8 @@ class Conversacion {
     final String id;
     /** CHAT_WEB o TELEGRAM: se guarda en el prospecto para saber por dónde llegó. */
     final String canal;
-    /** Chat de Telegram del cliente (solo en ese canal), para el seguimiento automático de HU13. */
-    Long telegramChatId;
+    /** Identificador del cliente en su canal (chat de Telegram o número de WhatsApp), para el seguimiento (HU13). */
+    String contacto;
     EstadoConversacion estado = EstadoConversacion.MENU;
     String nombre;
     String telefono;
