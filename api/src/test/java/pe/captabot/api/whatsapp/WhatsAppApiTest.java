@@ -43,7 +43,7 @@ class WhatsAppApiTest {
 
         String interactivo = cuerpo.get("interactive").toString();
         assertThat(interactivo).contains("type=list", "button=Ver opciones", "title=Alta: esta semana",
-                "title=Baja: solo estoy averigu…", "description=Baja: solo estoy averiguando");
+                "title=Baja: solo estoy averig…", "description=Baja: solo estoy averiguando");
     }
 
     @Test
