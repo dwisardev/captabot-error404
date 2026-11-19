@@ -1,0 +1,14 @@
+# GitHub Pages: protección mientras Pages siga configurado en «Deploy from a branch».
+# En ese modo GitHub publica el repositorio entero (código, documentos y scripts). Con esta lista
+# solo queda la carpeta sitio/. Lo correcto es Settings → Pages → Source: «GitHub Actions»: así
+# publica el workflow pages.yml (solo sitio/, con revisión de credenciales) y este archivo deja de usarse.
+# Si agregan una carpeta nueva en la raíz, agréguenla aquí también.
+exclude:
+  - README.md
+  - api
+  - asistente
+  - base-datos
+  - docs
+  - panel
+  - pruebas
+  - docker-compose.yml
