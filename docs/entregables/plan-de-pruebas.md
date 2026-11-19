@@ -26,7 +26,7 @@ Comprobar que CaptaBot cumple los criterios de aceptación de las 13 historias d
 | Unitarias de la API | JUnit 5, Mockito, AssertJ, MockMvc | Calificación, usuarios, seguimiento, reportes, avisos automáticos y controladores | En cada push (GitHub Actions) y con `mvn test` |
 | Unitarias del panel | xUnit, WebApplicationFactory | Cliente de la API, controladores, exportación a Excel y páginas protegidas | En cada push y con `dotnet test` |
 | Base de datos | psql sobre PostgreSQL 16 limpio | Que los tres scripts se ejecuten sin errores y carguen 10 prospectos | En cada push |
-| Integración de la API | Postman y newman | 42 solicitudes con 56 verificaciones sobre la API real y la base de datos | En cada push y desde Postman |
+| Integración de la API | Postman y newman | 46 solicitudes con 62 verificaciones sobre la API real y la base de datos | En cada push y desde Postman |
 | Punta a punta | curl en GitHub Actions | BD + API + panel juntos: conversación del chat, inicio de sesión real, lista, reportes, Excel y usuarios | En cada push |
 | Contenedores | Docker Compose | Que el sistema completo levante con un solo comando | Cuando cambian Docker o las dependencias |
 | Asistente | JUnit, curl en el CI y navegador | Conversaciones de los casos A01 a A11 | En cada push; A07 y A08 a mano |
@@ -124,9 +124,9 @@ esperado, resultado obtenido y captura. La corrección se sube en un commit con 
 
 | Prueba | Resultado |
 |---|---|
-| JUnit (API) | 129 pruebas, 0 fallos |
+| JUnit (API) | 152 pruebas, 0 fallos |
 | xUnit (panel) | 53 pruebas, 0 fallos |
-| Postman / newman | 42 solicitudes, 56 verificaciones, 0 fallos |
+| Postman / newman | 46 solicitudes, 62 verificaciones, 0 fallos |
 | Punta a punta (BD + API + panel) | Correcta |
 | Docker Compose | Correcto |
 | Asistente (A01 a A06, A08 a A11) | Automatizados con JUnit y en el CI |

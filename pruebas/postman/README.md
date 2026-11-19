@@ -1,6 +1,6 @@
 # Prueba de integración con Postman (SCRUM-47)
 
-La colección `CaptaBot.postman_collection.json` tiene 42 solicitudes con sus pruebas
+La colección `CaptaBot.postman_collection.json` tiene 46 solicitudes con sus pruebas
 automáticas, ordenadas en cinco carpetas que se ejecutan en orden:
 
 | Carpeta | Historias | Qué comprueba |
