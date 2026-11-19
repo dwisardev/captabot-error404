@@ -3,21 +3,44 @@
     ViewData["Title"] = "Iniciar sesión";
 }
 <section class="login">
-    <div class="tarjeta">
-        <h1 class="marca-grande">CaptaBot</h1>
-        <p class="sutil">Panel del equipo de ventas</p>
-        <form asp-action="Login" method="post" novalidate>
-            <div asp-validation-summary="ModelOnly" class="aviso aviso-error"></div>
-            <input type="hidden" asp-for="ReturnUrl" />
-            <label asp-for="Correo"></label>
-            <input asp-for="Correo" type="email" autocomplete="username" autofocus />
-            <span asp-validation-for="Correo" class="error-campo"></span>
+    <div class="login-marca">
+        <span class="marca-logo"><svg class="ico" aria-hidden="true"><use href="#i-bot" /></svg></span>
+        <h2 class="marca-grande">CaptaBot</h2>
+        <p>Convierte cada conversación en una venta. El asistente atiende, tú cierras.</p>
+        <ul class="login-lista">
+            <li><svg class="ico" aria-hidden="true"><use href="#i-chat" /></svg>Prospectos del chat web y de Telegram en un solo lugar</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-llama" /></svg>Los más calientes aparecen primero</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-grafico" /></svg>Embudo de ventas y reportes en Excel</li>
+        </ul>
+    </div>
 
-            <label asp-for="Contrasena"></label>
-            <input asp-for="Contrasena" autocomplete="current-password" />
-            <span asp-validation-for="Contrasena" class="error-campo"></span>
+    <div class="login-form">
+        <button type="button" class="icon-boton" data-cambiar-tema aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">
+            <svg class="ico tema-luna" aria-hidden="true"><use href="#i-luna" /></svg>
+            <svg class="ico tema-sol" aria-hidden="true"><use href="#i-sol" /></svg>
+        </button>
+        <div class="login-caja">
+            <h1>Bienvenido de nuevo</h1>
+            <p class="sutil">Panel del equipo de ventas</p>
+            <form asp-action="Login" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="aviso aviso-error"></div>
+                <input type="hidden" asp-for="ReturnUrl" />
+                <label asp-for="Correo"></label>
+                <div class="campo">
+                    <svg class="ico" aria-hidden="true"><use href="#i-correo" /></svg>
+                    <input asp-for="Correo" type="email" autocomplete="username" autofocus />
+                </div>
+                <span asp-validation-for="Correo" class="error-campo"></span>
 
-            <button type="submit" class="boton boton-ancho">Iniciar sesión</button>
-        </form>
+                <label asp-for="Contrasena"></label>
+                <div class="campo">
+                    <svg class="ico" aria-hidden="true"><use href="#i-candado" /></svg>
+                    <input asp-for="Contrasena" autocomplete="current-password" />
+                </div>
+                <span asp-validation-for="Contrasena" class="error-campo"></span>
+
+                <button type="submit" class="boton boton-ancho">Iniciar sesión</button>
+            </form>
+        </div>
     </div>
 </section>
