@@ -1,0 +1,60 @@
+# Publica la página pública de CaptaBot (portada, privacidad, eliminación de datos y condiciones)
+# en GitHub Pages. Solo se sube la carpeta sitio/: el código, los .env y los demás archivos del
+# repositorio nunca llegan a la página.
+name: Página pública
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "sitio/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pagina-publica
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Revisar que sitio/ no tenga credenciales
+        run: |
+          set -eu
+          # Solo se permiten archivos de una página estática.
+          raros=$(find sitio -type f ! \( -name '*.html' -o -name '*.css' -o -name '*.svg' -o -name '*.woff2' \
+            -o -name '*.txt' -o -name '*.png' -o -name '*.jpg' -o -name '*.webp' -o -name '*.ico' \))
+          if [ -n "$raros" ]; then
+            echo "::error::Hay archivos que no deben publicarse en sitio/:"; echo "$raros"; exit 1
+          fi
+          # Tokens de Telegram y Meta, claves privadas y variables del .env. Solo se muestra el
+          # nombre del archivo, nunca la línea, para no copiar un secreto en el registro.
+          patron='[0-9]{8,10}:[A-Za-z0-9_-]{35}|EAA[A-Za-z0-9]{30,}|LLM_[0-9]{10,}_|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+          patron="$patron"'|(TELEGRAM_BOT_TOKEN|AZURE_LANGUAGE_KEY|CAPTABOT_API_KEY|WHATSAPP_[A-Z_]+|POSTGRES_PASSWORD|DB_PASSWORD)[[:space:]]*='
+          if grep -rIElq "$patron" sitio; then
+            echo "::error::Algo en estos archivos parece una credencial:"; grep -rIEl "$patron" sitio; exit 1
+          fi
+          if grep -rIlq "CORREO_DEL_EQUIPO" sitio; then
+            echo "::error::Falta reemplazar CORREO_DEL_EQUIPO por el correo de contacto"; exit 1
+          fi
+          echo "Sin credenciales: se publican $(find sitio -type f | wc -l) archivos."
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: sitio
+
+      - id: despliegue
+        uses: actions/deploy-pages@v4

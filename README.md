@@ -107,3 +107,18 @@ En cada push a `main` y en cada pull request, GitHub Actions:
    desde el chat del asistente, inicio de sesión, cambio de etapa, notas, reportes y descarga de Excel.
 
 Si algo falla, el resultado aparece en la pestaña **Actions** y en el pull request.
+
+## Página pública
+
+La carpeta `sitio/` es la página pública de CaptaBot: portada, política de privacidad, instrucciones para
+eliminar datos y condiciones de uso. Meta las pide para crear la app de WhatsApp.
+
+- Dirección: https://dwisardev.github.io/captabot-error404/
+- Privacidad: https://dwisardev.github.io/captabot-error404/privacidad.html
+- Eliminar datos: https://dwisardev.github.io/captabot-error404/eliminar-datos.html
+- Condiciones: https://dwisardev.github.io/captabot-error404/condiciones.html
+
+El workflow `.github/workflows/pages.yml` publica **solo** la carpeta `sitio/`, y antes revisa que no
+contenga tokens ni claves. El repositorio sigue siendo privado. La página es estática: no llama a la API
+ni usa cookies, y las fuentes están dentro de la carpeta. Para que funcione, en GitHub
+**Settings → Pages → Source** debe estar en **GitHub Actions**.

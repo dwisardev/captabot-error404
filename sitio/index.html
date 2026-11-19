@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CaptaBot: atiende y califica a tus clientes por chat</title>
+    <meta name="description" content="CaptaBot es un asistente para pequeñas empresas: conversa por la web, Telegram y WhatsApp, registra a cada interesado y lo califica como caliente, tibio o frío.">
+    <meta name="theme-color" content="#1f4e79">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preload" href="fuentes/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="estilos.css">
+    <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+<a class="saltar" href="#contenido">Ir al contenido</a>
+
+<header class="contenedor barra">
+    <a class="marca" href="./">
+        <img src="favicon.svg" alt="" width="32" height="32">
+        CaptaBot
+    </a>
+    <nav aria-label="Información legal">
+        <ul>
+            <li><a href="privacidad.html">Privacidad</a></li>
+            <li><a href="eliminar-datos.html">Eliminar mis datos</a></li>
+            <li><a href="condiciones.html">Condiciones de uso</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main id="contenido">
+    <section class="contenedor portada" aria-labelledby="titulo">
+        <div>
+            <h1 id="titulo">Tus clientes escriben.
+                <span>CaptaBot los atiende y te dice quién está listo para comprar.</span></h1>
+            <p>Un asistente para pequeñas empresas que conversa por tu página web, Telegram y WhatsApp,
+                registra a cada interesado y lo califica como caliente, tibio o frío para que tu equipo
+                sepa a quién llamar primero.</p>
+        </div>
+
+        <figure class="chat" aria-label="Ejemplo de una conversación con CaptaBot">
+            <figcaption class="chat-cabecera"><i aria-hidden="true"></i><b>CaptaBot</b> en WhatsApp</figcaption>
+            <ol>
+                <li class="burbuja cliente" data-paso>Hola, necesito una página web para mi bodega</li>
+                <li class="burbuja bot" data-paso>¡Hola! Te ayudo con eso. ¿Cómo te llamas?</li>
+                <li class="burbuja cliente" data-paso>Rosa Quispe</li>
+                <li class="burbuja bot" data-paso>Gracias, Rosa. ¿Cuánto tienes pensado invertir?</li>
+                <li class="burbuja cliente" data-paso>Unos S/ 1 500</li>
+                <li class="burbuja bot" data-paso>¿Para cuándo lo necesitas?</li>
+                <li class="burbuja cliente" data-paso>Esta semana, si se puede</li>
+            </ol>
+            <div class="ficha" data-paso>
+                <p class="ficha-titulo"><span>Prospecto registrado</span><span>70 de 100</span></p>
+                <p class="ficha-nombre">Rosa Quispe</p>
+                <p class="ficha-detalle">Página web, S/ 1 500, urgencia alta</p>
+                <span class="etiqueta caliente">Caliente</span>
+                <div class="termometro" role="img" aria-label="Puntaje 70 de 100"><b style="left:70%"></b></div>
+            </div>
+        </figure>
+    </section>
+
+    <section class="seccion" aria-labelledby="como">
+        <div class="contenedor">
+            <h2 id="como">Cómo funciona</h2>
+            <p>Del primer mensaje al aviso para tu vendedor, sin que nadie tenga que estar mirando el chat.</p>
+            <ol class="pasos">
+                <li>
+                    <h3>Conversa</h3>
+                    <p>Responde las preguntas frecuentes de tu negocio y pide nombre, teléfono, servicio,
+                        presupuesto y urgencia. Antes de guardar, le muestra al cliente un resumen para que lo confirme.</p>
+                </li>
+                <li>
+                    <h3>Califica</h3>
+                    <p>Suma puntos según el presupuesto y la urgencia, y clasifica al interesado como caliente,
+                        tibio o frío.</p>
+                </li>
+                <li>
+                    <h3>Avisa</h3>
+                    <p>Tu equipo recibe el nuevo prospecto en Telegram y en el panel web. Si un cliente caliente
+                        no recibe respuesta, CaptaBot envía un recordatorio.</p>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="seccion" aria-labelledby="canales">
+        <div class="contenedor">
+            <h2 id="canales">Dónde atiende</h2>
+            <p>Un solo asistente, con la misma conversación en los canales que tus clientes ya usan.</p>
+            <ul class="canales">
+                <li>
+                    <h3>Tu página web</h3>
+                    <p>Un botón en la esquina de tu web abre el chat. Funciona en computadora y celular.</p>
+                </li>
+                <li>
+                    <h3>Telegram</h3>
+                    <p>Tus clientes escriben al bot de tu empresa y tus vendedores reciben ahí los avisos.</p>
+                </li>
+                <li>
+                    <h3>WhatsApp</h3>
+                    <p>Atiende desde el número de WhatsApp Business de tu empresa, con botones para responder rápido.</p>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="seccion" aria-labelledby="calificacion">
+        <div class="contenedor">
+            <h2 id="calificacion">Cómo califica</h2>
+            <p>El puntaje va de 0 a 100: hasta 50 puntos por el presupuesto y hasta 50 por la urgencia.</p>
+            <dl class="niveles">
+                <div>
+                    <dt><span class="etiqueta caliente">Caliente</span></dt>
+                    <dd><strong>70 a 100 puntos.</strong> Tiene presupuesto y lo necesita pronto. Conviene llamarlo hoy.</dd>
+                </div>
+                <div>
+                    <dt><span class="etiqueta tibio">Tibio</span></dt>
+                    <dd><strong>40 a 69 puntos.</strong> Está interesado, pero aún compara o no tiene apuro.</dd>
+                </div>
+                <div>
+                    <dt><span class="etiqueta frio">Frío</span></dt>
+                    <dd><strong>0 a 39 puntos.</strong> Recién está averiguando. Vale la pena hacerle seguimiento.</dd>
+                </div>
+            </dl>
+            <p class="nota">Los nombres y montos de esta página son ejemplos.</p>
+        </div>
+    </section>
+</main>
+
+<footer class="pie">
+    <div class="contenedor">
+        <p>CaptaBot es el proyecto del equipo ERROR 404 para el curso Proyecto Integrador del IES Cibertec, Lima, 2026.</p>
+        <ul>
+            <li><a href="privacidad.html">Política de privacidad</a></li>
+            <li><a href="eliminar-datos.html">Eliminar mis datos</a></li>
+            <li><a href="condiciones.html">Condiciones de uso</a></li>
+        </ul>
+    </div>
+</footer>
+
+<script>
+    (function () {
+        var pasos = document.querySelectorAll(".chat [data-paso]");
+        var calma = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        pasos.forEach(function (paso, i) {
+            if (calma) { paso.classList.add("visible"); return; }
+            setTimeout(function () { paso.classList.add("visible"); }, 400 + i * 520);
+        });
+    })();
+</script>
+</body>
+</html>
