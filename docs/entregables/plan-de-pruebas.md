@@ -5,8 +5,8 @@ Responsable: Said Oyola (pruebas) con apoyo de todo el equipo.
 
 ## 1. Objetivo
 
-Comprobar que CaptaBot cumple los criterios de aceptación de las 12 historias de usuario
-(HU01 a HU12) y que cada cambio que se sube al repositorio mantiene el sistema funcionando.
+Comprobar que CaptaBot cumple los criterios de aceptación de las 13 historias de usuario
+(HU01 a HU13) y que cada cambio que se sube al repositorio mantiene el sistema funcionando.
 
 ## 2. Alcance
 
@@ -16,12 +16,13 @@ Comprobar que CaptaBot cumple los criterios de aceptación de las 12 historias d
 | API Java (Spring Boot) | Reglas de negocio, validaciones, seguridad con clave, respuestas HTTP | Carga y estrés |
 | Panel .NET | Inicio de sesión, permisos, pantallas, filtros, exportación a Excel | Compatibilidad con navegadores antiguos |
 | Asistente (chat + Azure AI Language) | Preguntas frecuentes, captación de datos, validaciones y registro del prospecto | Calidad de las respuestas de Azure fuera de las frases cargadas |
+| Automatización por Telegram (HU13) | Vínculo de vendedores, avisos, recordatorios y seguimiento, con un Telegram simulado | Entrega real de Telegram (se prueba a mano, N07) |
 
 ## 3. Tipos de prueba y herramientas
 
 | Tipo | Herramienta | Qué cubre | Cuándo se ejecuta |
 |---|---|---|---|
-| Unitarias de la API | JUnit 5, Mockito, AssertJ, MockMvc | Calificación, usuarios, seguimiento, reportes y controladores | En cada push (GitHub Actions) y con `mvn test` |
+| Unitarias de la API | JUnit 5, Mockito, AssertJ, MockMvc | Calificación, usuarios, seguimiento, reportes, avisos automáticos y controladores | En cada push (GitHub Actions) y con `mvn test` |
 | Unitarias del panel | xUnit, WebApplicationFactory | Cliente de la API, controladores, exportación a Excel y páginas protegidas | En cada push y con `dotnet test` |
 | Base de datos | psql sobre PostgreSQL 16 limpio | Que los tres scripts se ejecuten sin errores y carguen 10 prospectos | En cada push |
 | Integración de la API | Postman y newman | 42 solicitudes con 56 verificaciones sobre la API real y la base de datos | En cada push y desde Postman |
@@ -90,6 +91,13 @@ Estado: **Auto** = automatizado y en verde en el CI · **Manual** = se prueba a 
 | HU12 | R04 | Tasa de conversión | Ganados / total con dos decimales | Auto |
 | HU12 | R05 | Embudo | Las 5 etapas en orden | Auto |
 | HU12 | R06 | Filtrar por fechas | Embudo y tasa solo del periodo | Auto |
+| HU13 | N01 | Escribir al bot `/vendedor` con el código correcto, con uno incorrecto y sin código en el .env | Vincula solo con el código correcto; si falta el código, avisa que está apagado | Auto |
+| HU13 | N02 | Escribir `/salir` | El chat deja de recibir avisos | Auto |
+| HU13 | N03 | Registrar un prospecto con vendedores vinculados | Cada vendedor recibe calificación, datos y botón de WhatsApp | Auto |
+| HU13 | N04 | Prospecto caliente o tibio que sigue en «Nuevo» pasado el tiempo | Un solo recordatorio al equipo; no se marca si no hay vendedores | Auto |
+| HU13 | N05 | Cliente de Telegram con la venta abierta pasado el tiempo | El bot le escribe una sola vez con el menú | Auto |
+| HU13 | N06 | La API lee el .env de la raíz y muestra la automatización en /api/health | Tiempos del .env; avisos apagados sin token | Auto (CI) |
+| HU13 | N07 | Demostración real con tiempos cortos (1 y 2 minutos) | Aviso, recordatorio y seguimiento llegan al celular | Manual |
 
 ## 6. Criterios de aceptación de una entrega
 
@@ -107,7 +115,7 @@ esperado, resultado obtenido y captura. La corrección se sube en un commit con 
 
 | Prueba | Resultado |
 |---|---|
-| JUnit (API) | 115 pruebas, 0 fallos |
+| JUnit (API) | 129 pruebas, 0 fallos |
 | xUnit (panel) | 53 pruebas, 0 fallos |
 | Postman / newman | 42 solicitudes, 56 verificaciones, 0 fallos |
 | Punta a punta (BD + API + panel) | Correcta |
@@ -115,3 +123,5 @@ esperado, resultado obtenido y captura. La corrección se sube en un commit con 
 | Asistente (A01 a A06, A08 a A11) | Automatizados con JUnit y en el CI |
 | A07 con Azure AI Language | Pendiente: crear el recurso gratuito en Azure |
 | A10 con el bot real de Telegram | Pendiente: crear el bot con @BotFather |
+| Automatización (N01 a N06) | Automatizados con JUnit y en el CI |
+| N07 demostración real | Pendiente: probar con el bot real y tiempos cortos |

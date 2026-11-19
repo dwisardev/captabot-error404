@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /** HU02 por Telegram: el bot sigue la misma conversación que la página web. */
 class TelegramBotTest {
@@ -46,6 +47,7 @@ class TelegramBotTest {
 
     private TelegramFalso telegram;
     private ProspectoService prospectos;
+    private AvisosService avisos;
     private TelegramBot bot;
 
     @BeforeEach
@@ -54,7 +56,8 @@ class TelegramBotTest {
         prospectos = mock(ProspectoService.class);
         ConversacionService chat = new ConversacionService(prospectos, new PreguntasAzure("", "", ""),
                 new PreguntasLocales());
-        bot = new TelegramBot(telegram, chat);
+        avisos = mock(AvisosService.class);
+        bot = new TelegramBot(telegram, chat, avisos);
     }
 
     private static Map<String, Object> texto(long chatId, String texto) {
@@ -93,7 +96,7 @@ class TelegramBotTest {
         bot.atender(texto(77, "Sí, registrar"));
 
         ArgumentCaptor<ProspectoRequest> datos = ArgumentCaptor.forClass(ProspectoRequest.class);
-        verify(prospectos).registrar(datos.capture(), eq(ConversacionService.CANAL_TELEGRAM));
+        verify(prospectos).registrar(datos.capture(), eq(ConversacionService.CANAL_TELEGRAM), eq(77L));
         assertThat(datos.getValue().telefono()).isEqualTo("987654321");
         assertThat(datos.getValue().nombre()).isEqualTo("Rosa Vega");
         assertThat(telegram.enviados.get(telegram.enviados.size() - 2).texto())
@@ -107,6 +110,28 @@ class TelegramBotTest {
 
         assertThat(telegram.enviados.get(0).texto()).contains("¿Estás de acuerdo?");
         assertThat(telegram.enviados.get(1).texto()).contains("lunes a viernes");
+    }
+
+    @Test
+    void vinculaAlVendedorConElCodigo() {
+        when(avisos.vincular(9L, "Ana", "clave-123")).thenReturn("Listo, Ana.");
+
+        bot.atender(Map.of("update_id", 5, "message", Map.of("chat", Map.of("id", 9, "type", "private"),
+                "from", Map.of("first_name", "Ana"), "text", "/vendedor clave-123")));
+
+        verify(avisos).vincular(9L, "Ana", "clave-123");
+        assertThat(telegram.ultimo().texto()).isEqualTo("Listo, Ana.");
+        assertThat(telegram.ultimo().teclado()).containsEntry("remove_keyboard", true);
+    }
+
+    @Test
+    void salirDejaDeRecibirAvisos() {
+        when(avisos.desvincular(9L)).thenReturn("Listo, ya no recibirás avisos de ventas en este chat.");
+
+        bot.atender(texto(9, "/salir"));
+
+        verify(avisos).desvincular(9L);
+        assertThat(telegram.ultimo().texto()).contains("ya no recibirás avisos");
     }
 
     @Test

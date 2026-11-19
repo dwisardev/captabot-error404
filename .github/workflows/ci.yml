@@ -38,10 +38,16 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f base-datos/scripts/01_crear_esquema.sql
           psql -v ON_ERROR_STOP=1 -f base-datos/scripts/02_vistas_reportes.sql
+          psql -v ON_ERROR_STOP=1 -f base-datos/scripts/03_automatizacion.sql
           psql -v ON_ERROR_STOP=1 -f base-datos/datos-prueba/01_datos_prueba.sql
+          # El script de la automatización se puede volver a ejecutar en una base existente
+          psql -v ON_ERROR_STOP=1 -f base-datos/scripts/03_automatizacion.sql
 
       - name: Verificar los datos de prueba
         run: |
+          test "$(psql -tAc "SELECT count(*) FROM information_schema.columns WHERE table_name = 'prospectos'
+            AND column_name IN ('telegram_chat_id', 'recordatorio_en', 'seguimiento_cliente_en')")" = "3"
+          psql -c '\d avisos_telegram'
           test "$(psql -tAc 'SELECT COUNT(*) FROM prospectos')" = "10"
           psql -c 'SELECT * FROM v_embudo_etapas'
           psql -c 'SELECT * FROM v_tasa_conversion'
@@ -125,6 +131,7 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f base-datos/scripts/01_crear_esquema.sql
           psql -v ON_ERROR_STOP=1 -f base-datos/scripts/02_vistas_reportes.sql
+          psql -v ON_ERROR_STOP=1 -f base-datos/scripts/03_automatizacion.sql
           psql -v ON_ERROR_STOP=1 -f base-datos/datos-prueba/01_datos_prueba.sql
 
       - name: Compilar la API
@@ -133,6 +140,8 @@ jobs:
 
       - name: Iniciar la API
         run: |
+          # Igual que en una laptop: la API lee el archivo .env de la raíz del proyecto
+          printf 'CAPTABOT_RECORDATORIO_MINUTOS=7\nTELEGRAM_CODIGO_VENTAS=codigo-ci\n' > .env
           nohup java -jar api/target/captabot-api.jar > api.log 2>&1 &
           for i in $(seq 1 60); do
             curl -fs "$API/api/health" && exit 0
@@ -140,6 +149,16 @@ jobs:
           done
           echo "La API no respondió a tiempo"
           exit 1
+
+      - name: Probar la configuración de la automatización (HU13)
+        run: |
+          set -e
+          estado=$(curl -fs "$API/api/health")
+          echo "$estado"
+          echo "1. La API leyó el .env de la raíz (recordatorio a los 7 minutos)"
+          echo "$estado" | jq -e '.automatizacion.recordatorioMinutos == 7 and .automatizacion.seguimientoClienteMinutos == 1440'
+          echo "2. Sin token de Telegram, los avisos quedan apagados y no hay vendedores vinculados"
+          echo "$estado" | jq -e '.telegram == "apagado" and .automatizacion.avisosVendedores == "apagado" and .automatizacion.vendedoresVinculados == 0'
 
       - name: Probar el flujo asistente → API → base de datos
         run: |

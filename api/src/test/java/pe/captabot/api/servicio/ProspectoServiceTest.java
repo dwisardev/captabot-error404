@@ -39,10 +39,11 @@ class ProspectoServiceTest {
     private ProspectoRepository repositorio;
 
     private ProspectoService servicio;
+    private final List<Object> eventos = new java.util.ArrayList<>();
 
     @BeforeEach
     void preparar() {
-        servicio = new ProspectoService(repositorio, new CalificacionService());
+        servicio = new ProspectoService(repositorio, new CalificacionService(), eventos::add);
     }
 
     @Test
@@ -65,6 +66,21 @@ class ProspectoServiceTest {
         assertThat(registrado.getCalificacion()).isEqualTo(Calificacion.CALIENTE);
         assertThat(registrado.getEtapa()).isEqualTo(Etapa.NUEVO);
         assertThat(registrado.getCanal()).isEqualTo("CHAT_WEB");
+        assertThat(registrado.getTelegramChatId()).isNull();
+        assertThat(eventos).containsExactly(new ProspectoRegistrado(registrado));
+    }
+
+    @Test
+    void guardaElChatDeTelegramDelCliente() {
+        when(repositorio.save(any(Prospecto.class))).thenAnswer(inv -> inv.getArgument(0));
+        ProspectoRequest solicitud = new ProspectoRequest(
+                "Rosa Vega", "987654321", "Diseño web", new BigDecimal("3000"), "media");
+
+        Prospecto registrado = servicio.registrar(solicitud, "TELEGRAM", 77L);
+
+        assertThat(registrado.getCanal()).isEqualTo("TELEGRAM");
+        assertThat(registrado.getTelegramChatId()).isEqualTo(77L);
+        assertThat(eventos).hasSize(1);
     }
 
     @Test

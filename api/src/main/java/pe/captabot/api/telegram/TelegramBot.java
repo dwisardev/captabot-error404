@@ -29,14 +29,16 @@ public class TelegramBot implements DisposableBean {
 
     private final TelegramApi api;
     private final ConversacionService conversaciones;
+    private final AvisosService avisos;
     private final Map<Long, String> sesiones = new ConcurrentHashMap<>();
     private volatile boolean activo;
     private Thread hilo;
     private long siguiente;
 
-    public TelegramBot(TelegramApi api, ConversacionService conversaciones) {
+    public TelegramBot(TelegramApi api, ConversacionService conversaciones, AvisosService avisos) {
         this.api = api;
         this.conversaciones = conversaciones;
+        this.avisos = avisos;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -94,18 +96,36 @@ public class TelegramBot implements DisposableBean {
             api.enviar(chatId, SOLO_TEXTO, null);
             return;
         }
+        String comando = texto.split("\\s+", 2)[0].toLowerCase(java.util.Locale.ROOT).replaceFirst("@.*$", "");
+        if (comando.equals("/vendedor")) {
+            String codigo = texto.contains(" ") ? texto.substring(texto.indexOf(' ') + 1) : "";
+            api.enviar(chatId, avisos.vincular(chatId, nombreDe(mensaje), codigo), Map.of("remove_keyboard", true));
+            return;
+        }
+        if (comando.equals("/salir")) {
+            api.enviar(chatId, avisos.desvincular(chatId), null);
+            return;
+        }
         String sesion = sesiones.get(chatId);
-        if (texto.startsWith("/start")) {
+        if (comando.equals("/start")) {
             sesion = null;
             texto = "";
         }
-        RespuestaChat respuesta = conversaciones.procesar(sesion, texto, ConversacionService.CANAL_TELEGRAM);
+        RespuestaChat respuesta = conversaciones.procesar(sesion, texto, ConversacionService.CANAL_TELEGRAM, chatId);
         sesiones.put(chatId, respuesta.sesionId());
         List<String> mensajes = respuesta.mensajes();
         for (int i = 0; i < mensajes.size(); i++) {
             boolean ultimo = i == mensajes.size() - 1;
             api.enviar(chatId, mensajes.get(i), ultimo ? teclado(respuesta) : null);
         }
+    }
+
+    /** Nombre de pila de quien escribe, para saludar al vendedor que se vincula. */
+    static String nombreDe(Map<?, ?> mensaje) {
+        if (mensaje.get("from") instanceof Map<?, ?> de && de.get("first_name") instanceof String nombre) {
+            return nombre;
+        }
+        return null;
     }
 
     /** El texto del mensaje, o el número si el cliente usó «Compartir mi número». */

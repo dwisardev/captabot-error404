@@ -12,6 +12,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -52,13 +53,13 @@ class ConversacionServiceTest {
                 "Diseño web", "S/ 6,000.00", "Alta (esta semana)");
         assertThat(resumen.opciones()).isEqualTo(ConversacionService.CONFIRMAR);
         assertThat(resumen.registrado()).isFalse();
-        verify(prospectos, never()).registrar(any(), any());
+        verify(prospectos, never()).registrar(any(), any(), any());
         RespuestaChat fin = chat.procesar(s, "Sí, registrar");
 
         assertThat(fin.registrado()).isTrue();
         assertThat(fin.mensajes().get(0)).isEqualTo("Gracias, María. Registramos tus datos y un asesor te contactará pronto.");
         ArgumentCaptor<ProspectoRequest> datos = ArgumentCaptor.forClass(ProspectoRequest.class);
-        verify(prospectos).registrar(datos.capture(), eq(ConversacionService.CANAL_WEB));
+        verify(prospectos).registrar(datos.capture(), eq(ConversacionService.CANAL_WEB), isNull());
         assertThat(datos.getValue().nombre()).isEqualTo("maría quispe");
         assertThat(datos.getValue().telefono()).isEqualTo("987654321");
         assertThat(datos.getValue().servicioInteres()).isEqualTo("Diseño web");
@@ -73,7 +74,7 @@ class ConversacionServiceTest {
         RespuestaChat r = chat.procesar(s, "Corregir datos");
 
         assertThat(r.mensajes().get(0)).contains("¿Cuál es tu nombre?");
-        verify(prospectos, never()).registrar(any(), any());
+        verify(prospectos, never()).registrar(any(), any(), any());
         assertThat(chat.procesar(s, "Luis Rojas").mensajes().get(0)).startsWith("Gracias, Luis.");
     }
 
@@ -85,7 +86,7 @@ class ConversacionServiceTest {
 
         assertThat(r.mensajes().get(0)).contains("no registré tus datos");
         assertThat(r.opciones()).isEqualTo(ConversacionService.MENU);
-        verify(prospectos, never()).registrar(any(), any());
+        verify(prospectos, never()).registrar(any(), any(), any());
     }
 
     @Test
@@ -95,7 +96,7 @@ class ConversacionServiceTest {
         RespuestaChat r = chat.procesar(s, "mmm");
 
         assertThat(r.opciones()).isEqualTo(ConversacionService.CONFIRMAR);
-        verify(prospectos, never()).registrar(any(), any());
+        verify(prospectos, never()).registrar(any(), any(), any());
     }
 
     @Test
@@ -116,7 +117,7 @@ class ConversacionServiceTest {
         RespuestaChat r = chat.procesar(s, "no");
 
         assertThat(r.mensajes().get(0)).contains("no guardaremos tus datos");
-        verify(prospectos, never()).registrar(any(), any());
+        verify(prospectos, never()).registrar(any(), any(), any());
     }
 
     @Test
@@ -168,7 +169,7 @@ class ConversacionServiceTest {
         RespuestaChat r = chat.procesar(s, "menú");
 
         assertThat(r.opciones()).isEqualTo(ConversacionService.MENU);
-        verify(prospectos, never()).registrar(any(), any());
+        verify(prospectos, never()).registrar(any(), any(), any());
     }
 
     @Test

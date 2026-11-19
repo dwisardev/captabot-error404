@@ -58,6 +58,18 @@ public class Prospecto {
     @Column(name = "creado_en", nullable = false, updatable = false)
     private OffsetDateTime creadoEn;
 
+    /** Chat de Telegram del cliente, si llegó por el bot (HU13). */
+    @Column(name = "telegram_chat_id")
+    private Long telegramChatId;
+
+    /** Cuándo se recordó al equipo que seguía sin contactar (HU13). */
+    @Column(name = "recordatorio_en")
+    private OffsetDateTime recordatorioEn;
+
+    /** Cuándo el bot envió el mensaje de seguimiento al cliente (HU13). */
+    @Column(name = "seguimiento_cliente_en")
+    private OffsetDateTime seguimientoClienteEn;
+
     @PrePersist
     void alCrear() {
         if (creadoEn == null) {
@@ -100,4 +112,15 @@ public class Prospecto {
 
     public OffsetDateTime getCreadoEn() { return creadoEn; }
     public void setCreadoEn(OffsetDateTime creadoEn) { this.creadoEn = creadoEn; }
+
+    public Long getTelegramChatId() { return telegramChatId; }
+    public void setTelegramChatId(Long telegramChatId) { this.telegramChatId = telegramChatId; }
+
+    public OffsetDateTime getRecordatorioEn() { return recordatorioEn; }
+    public void setRecordatorioEn(OffsetDateTime recordatorioEn) { this.recordatorioEn = recordatorioEn; }
+
+    public OffsetDateTime getSeguimientoClienteEn() { return seguimientoClienteEn; }
+    public void setSeguimientoClienteEn(OffsetDateTime seguimientoClienteEn) {
+        this.seguimientoClienteEn = seguimientoClienteEn;
+    }
 }

@@ -24,6 +24,7 @@ sudo -u postgres psql -c "CREATE DATABASE captabot OWNER captabot;"
 export PGPASSWORD=captabot
 psql -h localhost -U captabot -d captabot -f scripts/01_crear_esquema.sql
 psql -h localhost -U captabot -d captabot -f scripts/02_vistas_reportes.sql
+psql -h localhost -U captabot -d captabot -f scripts/03_automatizacion.sql
 psql -h localhost -U captabot -d captabot -f datos-prueba/01_datos_prueba.sql
 ```
 

@@ -1,6 +1,7 @@
 package pe.captabot.api.servicio;
 
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -29,10 +30,13 @@ public class ProspectoService {
 
     private final ProspectoRepository repositorio;
     private final CalificacionService calificacionService;
+    private final ApplicationEventPublisher eventos;
 
-    public ProspectoService(ProspectoRepository repositorio, CalificacionService calificacionService) {
+    public ProspectoService(ProspectoRepository repositorio, CalificacionService calificacionService,
+                            ApplicationEventPublisher eventos) {
         this.repositorio = repositorio;
         this.calificacionService = calificacionService;
+        this.eventos = eventos;
     }
 
     /** Registra el prospecto que llega del asistente y lo califica. */
@@ -44,6 +48,15 @@ public class ProspectoService {
     /** Igual que registrar(solicitud), indicando el canal: CHAT_WEB o TELEGRAM. */
     @Transactional
     public Prospecto registrar(ProspectoRequest solicitud, String canal) {
+        return registrar(solicitud, canal, null);
+    }
+
+    /**
+     * Registra el prospecto indicando el canal y, si llegó por Telegram, su chat (para el seguimiento de HU13).
+     * Publica ProspectoRegistrado para avisar al equipo de ventas.
+     */
+    @Transactional
+    public Prospecto registrar(ProspectoRequest solicitud, String canal, Long telegramChatId) {
         Urgencia urgencia = Urgencia.desdeTexto(solicitud.urgencia());
         ResultadoCalificacion resultado = calificacionService.calificar(solicitud.presupuesto(), urgencia);
 
@@ -57,7 +70,10 @@ public class ProspectoService {
         prospecto.setCalificacion(resultado.calificacion());
         prospecto.setEtapa(Etapa.NUEVO);
         prospecto.setCanal(canal == null || canal.isBlank() ? "CHAT_WEB" : canal);
-        return repositorio.save(prospecto);
+        prospecto.setTelegramChatId(telegramChatId);
+        Prospecto guardado = repositorio.save(prospecto);
+        eventos.publishEvent(new ProspectoRegistrado(guardado));
+        return guardado;
     }
 
     /** Lista paginada de prospectos con filtros opcionales por calificación, etapa y fechas. */

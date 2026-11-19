@@ -33,7 +33,7 @@ public class ConversacionService {
     static final Duration EXPIRACION = Duration.ofMinutes(30);
     static final int MAXIMO_SESIONES = 5000;
 
-    static final List<String> MENU = List.of("¿Qué servicios ofrecen?", "¿Cuánto cuesta?", "¿Cuál es su horario?",
+    public static final List<String> MENU = List.of("¿Qué servicios ofrecen?", "¿Cuánto cuesta?", "¿Cuál es su horario?",
             "Quiero cotizar");
     static final List<String> SI_NO = List.of("Sí", "No");
     static final List<String> SERVICIOS = List.of("Diseño web", "Marketing digital", "Soporte técnico", "Otro");
@@ -70,11 +70,17 @@ public class ConversacionService {
 
     /** Mensaje de cualquier canal (página web o Telegram). */
     public RespuestaChat procesar(String sesionId, String texto, String canal) {
+        return procesar(sesionId, texto, canal, null);
+    }
+
+    /** Mensaje del bot de Telegram: guarda el chat del cliente para el seguimiento automático (HU13). */
+    public RespuestaChat procesar(String sesionId, String texto, String canal, Long telegramChatId) {
         limpiarVencidas();
         String entrada = texto == null ? "" : texto.trim().replaceAll("\\s+", " ");
         Conversacion c = sesionId == null ? null : sesiones.get(sesionId);
         if (c == null) {
             c = nueva(canal);
+            c.telegramChatId = telegramChatId;
             if (entrada.isEmpty() || esSaludo(entrada)) {
                 return responder(c, List.of(SALUDO), MENU);
             }
@@ -234,7 +240,7 @@ public class ConversacionService {
         }
         try {
             prospectos.registrar(new ProspectoRequest(c.nombre, c.telefono, c.servicio, c.presupuesto,
-                    c.urgencia.name()), c.canal);
+                    c.urgencia.name()), c.canal, c.telegramChatId);
         } catch (RuntimeException ex) {
             log.error("No se pudo registrar el prospecto del chat", ex);
             return responder(c, List.of("No pudimos registrar tus datos en este momento. Inténtalo de nuevo en unos "

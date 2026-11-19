@@ -137,7 +137,8 @@ registrar prospectos siguiendo la conversación.
    ```
 
    El token es como una contraseña: no lo compartan ni lo suban a GitHub.
-3. Reinicien con `docker compose up --build`. En `http://localhost:8080/api/health` debe decir
+3. Reinicien la API: con `docker compose up --build` o, desde el IDE, deteniéndola y volviéndola a
+   iniciar (la API también lee el `.env` de la raíz). En `http://localhost:8080/api/health` debe decir
    `"telegram": "activo"` y en el log de la API aparece «Bot de Telegram @… escuchando mensajes».
 4. Abran el bot en Telegram y toquen **Iniciar**. Prueben «Quiero cotizar» y, cuando pida el celular, el
    botón **📱 Compartir mi número**. El prospecto aparece en el panel con el canal «Telegram».
@@ -151,3 +152,44 @@ token a la vez: si dos integrantes levantan el sistema con el mismo token, uno d
 mensajes. Para probar por separado, que cada uno cree su propio bot de prueba.
 
 El bot solo responde en chats privados (no en grupos) y por ahora solo entiende mensajes de texto.
+
+## 7. Avisos y seguimiento automáticos (HU13)
+
+Con el bot de Telegram activo, CaptaBot automatiza tres cosas:
+
+| Qué pasa | Cuándo | Quién lo recibe |
+|---|---|---|
+| Aviso de prospecto nuevo, con su calificación y un botón de WhatsApp | Apenas se registra (web, Telegram o API) | Los vendedores vinculados |
+| Recordatorio de un prospecto caliente o tibio que sigue en «Nuevo» | Después de `CAPTABOT_RECORDATORIO_MINUTOS` (120) | Los vendedores vinculados |
+| Mensaje de seguimiento con el menú del asistente | Después de `CAPTABOT_SEGUIMIENTO_MINUTOS` (1440 = 24 h), si la venta sigue abierta | El cliente que llegó por Telegram |
+
+Cada recordatorio y cada seguimiento se envían **una sola vez**, y solo para prospectos de los últimos dos
+días. A los clientes del chat web no se les puede escribir después (no dejan un canal), así que a ellos
+los contacta el vendedor con el botón de WhatsApp.
+
+### Activarlo
+
+1. En el archivo `.env`, inventen un código para el equipo y, si quieren, ajusten los tiempos:
+
+   ```bash
+   TELEGRAM_CODIGO_VENTAS=ventas-error404
+   CAPTABOT_RECORDATORIO_MINUTOS=120
+   CAPTABOT_SEGUIMIENTO_MINUTOS=1440
+   ```
+
+2. Reinicien la API. En `/api/health`, la sección `automatizacion` debe decir `"avisosVendedores": "activo"`.
+3. Cada vendedor abre el bot en su Telegram y escribe `/vendedor ventas-error404`. Desde ese momento recibe
+   los avisos; con `/salir` deja de recibirlos. `vendedoresVinculados` en `/api/health` muestra cuántos hay.
+
+### Mostrarlo en la presentación
+
+Pongan tiempos cortos en el `.env` (por ejemplo `CAPTABOT_RECORDATORIO_MINUTOS=1` y
+`CAPTABOT_SEGUIMIENTO_MINUTOS=2`) y reinicien la API. Luego:
+
+1. Con un celular vinculado como vendedor, registren un prospecto desde la página web: el aviso llega al
+   instante.
+2. Si el prospecto es caliente o tibio y no le cambian la etapa, en uno o dos minutos llega el recordatorio.
+3. Desde otro Telegram, coticen por el bot: a los dos o tres minutos el bot le escribe el seguimiento.
+
+La revisión de pendientes corre cada minuto. Si Telegram no está configurado, nada de esto se activa y el
+resto del sistema funciona igual.

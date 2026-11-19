@@ -17,7 +17,8 @@ services:
       # Se ejecutan en orden alfabético solo la primera vez (con el volumen vacío)
       - ./base-datos/scripts/01_crear_esquema.sql:/docker-entrypoint-initdb.d/01_crear_esquema.sql:ro
       - ./base-datos/scripts/02_vistas_reportes.sql:/docker-entrypoint-initdb.d/02_vistas_reportes.sql:ro
-      - ./base-datos/datos-prueba/01_datos_prueba.sql:/docker-entrypoint-initdb.d/03_datos_prueba.sql:ro
+      - ./base-datos/scripts/03_automatizacion.sql:/docker-entrypoint-initdb.d/03_automatizacion.sql:ro
+      - ./base-datos/datos-prueba/01_datos_prueba.sql:/docker-entrypoint-initdb.d/04_datos_prueba.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U captabot -d captabot"]
       interval: 5s
@@ -37,6 +38,10 @@ services:
       AZURE_LANGUAGE_PROYECTO: ${AZURE_LANGUAGE_PROYECTO:-}
       # Canal de Telegram (opcional): token que entrega @BotFather
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      # Automatización (HU13): código para vincular vendedores y tiempos en minutos
+      TELEGRAM_CODIGO_VENTAS: ${TELEGRAM_CODIGO_VENTAS:-}
+      CAPTABOT_RECORDATORIO_MINUTOS: ${CAPTABOT_RECORDATORIO_MINUTOS:-120}
+      CAPTABOT_SEGUIMIENTO_MINUTOS: ${CAPTABOT_SEGUIMIENTO_MINUTOS:-1440}
     ports:
       - "8080:8080"
     depends_on:
