@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = Model.EsNuevo ? "Nuevo usuario" : "Editar usuario";
 }
-<p><a asp-action="Index" class="volver">← Volver a usuarios</a></p>
+<a asp-action="Index" class="volver"><svg class="ico" aria-hidden="true"><use href="#i-atras" /></svg>Volver a usuarios</a>
 
 <section class="tarjeta formulario">
     <h1>@ViewData["Title"]</h1>

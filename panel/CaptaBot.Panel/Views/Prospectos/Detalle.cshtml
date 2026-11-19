@@ -3,15 +3,32 @@
     var p = Model.Prospecto;
     ViewData["Title"] = p.Nombre;
 }
-<p><a asp-action="Index" class="volver">← Volver a la lista</a></p>
+<a asp-action="Index" class="volver"><svg class="ico" aria-hidden="true"><use href="#i-atras" /></svg>Volver a la lista</a>
 
-<div class="encabezado">
-    <h1>@p.Nombre</h1>
-    <div class="chips">
-        <span class="@Etiquetas.ClaseCalificacion(p.Calificacion)">@Etiquetas.TextoCalificacion(p.Calificacion) · @p.Puntaje puntos</span>
-        <span class="@Etiquetas.ClaseEtapa(p.Etapa)">@Etiquetas.TextoEtapa(p.Etapa)</span>
+<section class="tarjeta perfil">
+    <span class="avatar avatar-grande @Presentacion.ClaseAvatar(p.Id)" aria-hidden="true">@Presentacion.Iniciales(p.Nombre)</span>
+    <div class="perfil-datos">
+        <h1>@Presentacion.Nombre(p.Nombre)</h1>
+        <div class="chips">
+            <span class="@Etiquetas.ClaseCalificacion(p.Calificacion)">@Etiquetas.TextoCalificacion(p.Calificacion) · @p.Puntaje puntos</span>
+            <span class="@Etiquetas.ClaseEtapa(p.Etapa)">@Etiquetas.TextoEtapa(p.Etapa)</span>
+            <span class="chip chip-canal">
+                <svg class="ico" aria-hidden="true"><use href="@(p.Canal == "TELEGRAM" ? "#i-enviar" : "#i-globo")" /></svg>@Etiquetas.TextoCanal(p.Canal)
+            </span>
+        </div>
+        <div class="perfil-acciones">
+            <a href="tel:@p.Telefono" class="boton"><svg class="ico" aria-hidden="true"><use href="#i-telefono" /></svg>Llamar</a>
+            <a href="@Etiquetas.WhatsApp(p.Telefono)" target="_blank" rel="noopener" class="boton boton-verde"><svg class="ico" aria-hidden="true"><use href="#i-chat" /></svg>WhatsApp</a>
+        </div>
     </div>
-</div>
+    <div>
+        <div class="puntaje-envoltorio" role="img" aria-label="Puntaje @p.Puntaje de 100">
+            <div class="puntaje color-@p.Calificacion.ToLowerInvariant()" style="--p: @Math.Clamp(p.Puntaje, 0, 100)"></div>
+            <div class="puntaje-centro"><strong>@p.Puntaje</strong><span>de 100</span></div>
+        </div>
+        <span class="puntaje-etiqueta">Puntaje</span>
+    </div>
+</section>
 
 <div class="rejilla">
     <section class="tarjeta">
@@ -19,8 +36,7 @@
         <dl class="datos">
             <dt>Teléfono</dt>
             <dd>
-                <a href="tel:@p.Telefono">@p.Telefono</a> ·
-                <a href="@Etiquetas.WhatsApp(p.Telefono)" target="_blank" rel="noopener">WhatsApp</a>
+                <a href="tel:@p.Telefono">@p.Telefono</a>
             </dd>
             <dt>Servicio de interés</dt>
             <dd>@p.ServicioInteres</dd>
@@ -71,12 +87,12 @@
         <label for="contenido" class="oculto">Nueva nota</label>
         <textarea id="contenido" name="contenido" rows="3" maxlength="2000"
                   placeholder="¿Qué se habló con el cliente? Ej.: pidió la cotización por correo"></textarea>
-        <button type="submit" class="boton">Agregar nota</button>
+        <button type="submit" class="boton"><svg class="ico" aria-hidden="true"><use href="#i-mas" /></svg>Agregar nota</button>
     </form>
 
     @if (Model.Notas.Count == 0)
     {
-        <p class="sutil">Todavía no hay notas.</p>
+        <p class="sutil">Todavía no hay notas. Escribe la primera arriba.</p>
     }
     else
     {
@@ -85,8 +101,9 @@
             {
                 <li class="nota">
                     <div class="nota-cabecera">
-                        <strong>@nota.Autor</strong>
-                        <span class="sutil">
+                        <span class="avatar avatar-chico @Presentacion.ClaseAvatar(nota.AutorId)" aria-hidden="true">@Presentacion.Iniciales(nota.Autor)</span>
+                        <strong>@Presentacion.Nombre(nota.Autor)</strong>
+                        <span class="sutil fecha">
                             @Etiquetas.FechaHora(nota.CreadoEn)
                             @if (nota.EditadoEn is { } editada)
                             {

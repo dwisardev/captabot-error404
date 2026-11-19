@@ -5,10 +5,28 @@
     var periodo = CaptaBot.Panel.Controllers.ReportesController.DescribirPeriodo(Model.Desde, Model.Hasta);
 }
 <div class="encabezado">
-    <h1>Reportes</h1>
-    <div class="botones no-imprimir">
-        <a asp-action="Excel" asp-route-desde="@Iso(Model.Desde)" asp-route-hasta="@Iso(Model.Hasta)" class="boton">Descargar Excel</a>
-        <button type="button" class="boton boton-claro" onclick="window.print()">Imprimir o guardar PDF</button>
+    <div>
+        <h1>Reportes</h1>
+        <p class="sutil">Cómo llegan y avanzan tus prospectos</p>
+    </div>
+    <div class="botones no-imprimir" style="margin-top: 0">
+        <a asp-action="Excel" asp-route-desde="@Iso(Model.Desde)" asp-route-hasta="@Iso(Model.Hasta)" class="boton"><svg class="ico" aria-hidden="true"><use href="#i-descarga" /></svg>Descargar Excel</a>
+        <button type="button" class="boton boton-claro" onclick="window.print()"><svg class="ico" aria-hidden="true"><use href="#i-impresora" /></svg>Imprimir o guardar PDF</button>
+    </div>
+</div>
+
+<div class="indicadores">
+    <div class="tarjeta indicador ind-total">
+        <span class="indicador-icono"><svg class="ico" aria-hidden="true"><use href="#i-usuarios" /></svg></span>
+        <span><span class="indicador-valor">@Model.Conversion.TotalProspectos</span><span class="indicador-texto">Prospectos · @periodo</span></span>
+    </div>
+    <div class="tarjeta indicador ind-ganado">
+        <span class="indicador-icono"><svg class="ico" aria-hidden="true"><use href="#i-trofeo" /></svg></span>
+        <span><span class="indicador-valor">@Model.Conversion.Ganados</span><span class="indicador-texto">Cerrados – ganados</span></span>
+    </div>
+    <div class="tarjeta indicador ind-tibio">
+        <span class="indicador-icono"><svg class="ico" aria-hidden="true"><use href="#i-tendencia" /></svg></span>
+        <span><span class="indicador-valor">@Model.Conversion.TasaPorcentaje.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%</span><span class="indicador-texto">Conversión</span></span>
     </div>
 </div>
 
@@ -71,7 +89,7 @@
         <input id="hasta" name="hasta" type="date" value="@Iso(Model.Hasta)" />
     </div>
     <div class="acciones-filtro">
-        <button type="submit" class="boton">Aplicar al embudo y la conversión</button>
+        <button type="submit" class="boton"><svg class="ico" aria-hidden="true"><use href="#i-filtro" /></svg>Aplicar al embudo y la conversión</button>
         @if (Model.Desde is not null || Model.Hasta is not null)
         {
             <a asp-action="Index" class="boton boton-claro">Quitar fechas</a>
@@ -83,8 +101,15 @@
     <section class="tarjeta">
         <h2>Tasa de conversión</h2>
         <p class="sutil">@periodo</p>
-        <p class="cifra">@Model.Conversion.TasaPorcentaje.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) %</p>
-        <p>@Model.Conversion.Ganados de @Model.Conversion.TotalProspectos prospectos llegaron a «Cerrado – ganado».</p>
+        <div class="conversion" style="margin-top: 1rem">
+            <div class="dona-envoltorio" role="img" aria-label="Conversión del @Model.Conversion.TasaPorcentaje.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) por ciento">
+                <div class="dona" style="--p: @Math.Clamp((double)Model.Conversion.TasaPorcentaje, 0, 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"></div>
+                <p class="cifra">@Model.Conversion.TasaPorcentaje.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) %</p>
+            </div>
+            <div class="conversion-texto">
+                <p>@Model.Conversion.Ganados de @Model.Conversion.TotalProspectos prospectos llegaron a «Cerrado – ganado».</p>
+            </div>
+        </div>
     </section>
 
     <section class="tarjeta">

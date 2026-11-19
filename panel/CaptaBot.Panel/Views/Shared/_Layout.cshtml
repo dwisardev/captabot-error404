@@ -1,47 +1,105 @@
 @{
     var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
     var conSesion = User.Identity?.IsAuthenticated == true;
+    var nombreUsuario = User.Identity?.Name ?? "";
 }
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-tema="oscuro">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
     <title>@ViewData["Title"] · CaptaBot</title>
+    <script>
+        // Tema guardado (oscuro por defecto); se aplica antes de pintar para evitar el parpadeo.
+        try { var t = localStorage.getItem("captabot-tema"); if (t === "claro" || t === "oscuro") document.documentElement.setAttribute("data-tema", t); } catch (e) { /* sin almacenamiento */ }
+    </script>
     <link rel="stylesheet" href="~/css/sitio.css" asp-append-version="true" />
 </head>
 <body class="@(conSesion ? "" : "sin-sesion")">
+    <partial name="_Iconos" />
     @if (conSesion)
     {
-        <header class="barra">
-            <a class="marca" asp-controller="Prospectos" asp-action="Index">CaptaBot</a>
-            <nav class="menu">
-                <a asp-controller="Prospectos" asp-action="Index" class="@(controlador == "Prospectos" ? "activo" : "")">Prospectos</a>
-                <a asp-controller="Reportes" asp-action="Index" class="@(controlador == "Reportes" ? "activo" : "")">Reportes</a>
-                @if (User.EsAdministrador())
-                {
-                    <a asp-controller="Usuarios" asp-action="Index" class="@(controlador == "Usuarios" ? "activo" : "")">Usuarios</a>
-                }
-            </nav>
-            <div class="sesion">
-                <span>@(User.Identity?.Name)</span>
-                <form asp-controller="Cuenta" asp-action="Salir" method="post">
-                    <button type="submit" class="boton boton-claro">Salir</button>
-                </form>
+        <div class="app">
+            <aside class="lateral" id="lateral" aria-label="Navegación principal">
+              <div class="lateral-interno">
+                <a class="marca" asp-controller="Prospectos" asp-action="Index">
+                    <span class="marca-logo"><svg class="ico" aria-hidden="true"><use href="#i-bot" /></svg></span>CaptaBot
+                </a>
+                <nav class="menu">
+                    <div class="menu-titulo">Menú</div>
+                    <a asp-controller="Prospectos" asp-action="Index" class="@(controlador == "Prospectos" ? "activo" : "")" aria-current="@(controlador == "Prospectos" ? "page" : null)">
+                        <svg class="ico" aria-hidden="true"><use href="#i-usuarios" /></svg>Prospectos
+                    </a>
+                    <a asp-controller="Reportes" asp-action="Index" class="@(controlador == "Reportes" ? "activo" : "")" aria-current="@(controlador == "Reportes" ? "page" : null)">
+                        <svg class="ico" aria-hidden="true"><use href="#i-grafico" /></svg>Reportes
+                    </a>
+                    @if (User.EsAdministrador())
+                    {
+                        <a asp-controller="Usuarios" asp-action="Index" class="@(controlador == "Usuarios" ? "activo" : "")" aria-current="@(controlador == "Usuarios" ? "page" : null)">
+                            <svg class="ico" aria-hidden="true"><use href="#i-escudo" /></svg>Usuarios
+                        </a>
+                    }
+                </nav>
+                <div class="lateral-pie">Equipo ERROR 404<br />Proyecto Integrador · IES Cibertec</div>
+              </div>
+            </aside>
+            <div class="velo" id="velo-menu"></div>
+
+            <div class="principal">
+                <header class="cabecera">
+                    <button type="button" class="icon-boton btn-menu" id="abrir-menu" aria-label="Abrir el menú" aria-controls="lateral" aria-expanded="false">
+                        <svg class="ico" aria-hidden="true"><use href="#i-menu" /></svg>
+                    </button>
+                    <div class="cabecera-espacio"></div>
+                    <button type="button" class="icon-boton" data-cambiar-tema aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">
+                        <svg class="ico tema-luna" aria-hidden="true"><use href="#i-luna" /></svg>
+                        <svg class="ico tema-sol" aria-hidden="true"><use href="#i-sol" /></svg>
+                    </button>
+                    <div class="sesion">
+                        <div class="usuario">
+                            <span class="avatar avatar-chico @Presentacion.ClaseAvatar(User.UsuarioId())" aria-hidden="true">@Presentacion.Iniciales(nombreUsuario)</span>
+                            <span class="usuario-datos">
+                                <strong>@Presentacion.Nombre(nombreUsuario)</strong>
+                                <span>@(User.EsAdministrador() ? "Administrador" : "Vendedor")</span>
+                            </span>
+                        </div>
+                        <form asp-controller="Cuenta" asp-action="Salir" method="post">
+                            <button type="submit" class="boton boton-claro" title="Cerrar sesión">
+                                <svg class="ico" aria-hidden="true"><use href="#i-salir" /></svg>Salir
+                            </button>
+                        </form>
+                    </div>
+                </header>
+                <main class="contenido">
+                    @if (TempData["Exito"] is string exito)
+                    {
+                        <div class="aviso aviso-exito" role="status"><svg class="ico" aria-hidden="true"><use href="#i-ok" /></svg><span>@exito</span></div>
+                    }
+                    @if (TempData["Error"] is string error)
+                    {
+                        <div class="aviso aviso-error" role="alert"><svg class="ico" aria-hidden="true"><use href="#i-alerta" /></svg><span>@error</span></div>
+                    }
+                    @RenderBody()
+                </main>
+                <footer class="pie">CaptaBot · Equipo ERROR 404 · Proyecto Integrador – IES Cibertec</footer>
             </div>
-        </header>
+        </div>
     }
-    <main class="contenido">
-        @if (TempData["Exito"] is string exito)
-        {
-            <div class="aviso aviso-exito" role="status">@exito</div>
-        }
-        @if (TempData["Error"] is string error)
-        {
-            <div class="aviso aviso-error" role="alert">@error</div>
-        }
-        @RenderBody()
-    </main>
-    <footer class="pie">CaptaBot · Equipo ERROR 404 · Proyecto Integrador – IES Cibertec</footer>
+    else
+    {
+        <main class="contenido">
+            @if (TempData["Exito"] is string exito2)
+            {
+                <div class="aviso aviso-exito" role="status">@exito2</div>
+            }
+            @if (TempData["Error"] is string error2)
+            {
+                <div class="aviso aviso-error" role="alert">@error2</div>
+            }
+            @RenderBody()
+        </main>
+    }
+    <script src="~/js/panel.js" asp-append-version="true"></script>
 </body>
 </html>

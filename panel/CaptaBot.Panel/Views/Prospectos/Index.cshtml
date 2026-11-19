@@ -3,10 +3,34 @@
     ViewData["Title"] = "Prospectos";
     var f = Model.Filtro;
     string? Iso(DateOnly? fecha) => fecha?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+    var lista = Model.Resultado.Contenido;
+    var variasPaginas = Model.Resultado.TotalPaginas > 1;
+    var alcance = variasPaginas ? "en esta página" : "en la lista";
 }
 <div class="encabezado">
-    <h1>Prospectos</h1>
-    <p class="sutil">@Model.Resultado.TotalElementos registrados · los calientes aparecen primero</p>
+    <div>
+        <h1>Prospectos</h1>
+        <p class="sutil">@Model.Resultado.TotalElementos registrados · los calientes aparecen primero</p>
+    </div>
+</div>
+
+<div class="indicadores">
+    <div class="tarjeta indicador ind-total">
+        <span class="indicador-icono"><svg class="ico" aria-hidden="true"><use href="#i-usuarios" /></svg></span>
+        <span><span class="indicador-valor">@Model.Resultado.TotalElementos</span><span class="indicador-texto">Prospectos@(f.TieneFiltros ? " con estos filtros" : "")</span></span>
+    </div>
+    <div class="tarjeta indicador ind-caliente">
+        <span class="indicador-icono"><svg class="ico" aria-hidden="true"><use href="#i-llama" /></svg></span>
+        <span><span class="indicador-valor">@lista.Count(p => p.Calificacion == "CALIENTE")</span><span class="indicador-texto">Calientes @alcance</span></span>
+    </div>
+    <div class="tarjeta indicador ind-tibio">
+        <span class="indicador-icono"><svg class="ico" aria-hidden="true"><use href="#i-chispa" /></svg></span>
+        <span><span class="indicador-valor">@lista.Count(p => p.Etapa == "NUEVO")</span><span class="indicador-texto">Por contactar @alcance</span></span>
+    </div>
+    <div class="tarjeta indicador ind-ganado">
+        <span class="indicador-icono"><svg class="ico" aria-hidden="true"><use href="#i-trofeo" /></svg></span>
+        <span><span class="indicador-valor">@lista.Count(p => p.Etapa == "CERRADO_GANADO")</span><span class="indicador-texto">Ganados @alcance</span></span>
+    </div>
 </div>
 
 <form method="get" asp-action="Index" class="filtros tarjeta">
@@ -33,7 +57,7 @@
         <input id="hasta" name="hasta" type="date" value="@Iso(f.Hasta)" />
     </div>
     <div class="acciones-filtro">
-        <button type="submit" class="boton">Filtrar</button>
+        <button type="submit" class="boton"><svg class="ico" aria-hidden="true"><use href="#i-filtro" /></svg>Filtrar</button>
         @if (f.TieneFiltros)
         {
             <a asp-action="Index" class="boton boton-claro">Limpiar</a>
@@ -43,16 +67,22 @@
 
 <div asp-validation-summary="ModelOnly" class="aviso aviso-error"></div>
 
-@if (Model.Resultado.Contenido.Count == 0)
+@if (lista.Count == 0)
 {
     <section class="tarjeta vacio">
-        <p>No hay prospectos con estos filtros.</p>
+        <div class="vacio-icono"><svg class="ico" aria-hidden="true"><use href="#i-bandeja" /></svg></div>
+        <strong>No hay prospectos con estos filtros</strong>
+        <p>Prueba con otras fechas o quita los filtros para ver todos los registros.</p>
+        @if (f.TieneFiltros)
+        {
+            <p style="margin-top: 1rem"><a asp-action="Index" class="boton boton-claro">Limpiar filtros</a></p>
+        }
     </section>
 }
 else
 {
     <div class="tabla-contenedor tarjeta">
-        <table class="tabla">
+        <table class="tabla tabla-apilada">
             <thead>
                 <tr>
                     <th>Nombre</th>
@@ -65,19 +95,26 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var p in Model.Resultado.Contenido)
+                @foreach (var p in lista)
                 {
                     <tr>
-                        <td>
-                            <a asp-action="Detalle" asp-route-id="@p.Id" class="enlace-fuerte">@p.Nombre</a>
-                            <div class="sutil">@Etiquetas.TextoCanal(p.Canal)</div>
+                        <td class="celda-principal">
+                            <div class="persona">
+                                <span class="avatar @Presentacion.ClaseAvatar(p.Id)" aria-hidden="true">@Presentacion.Iniciales(p.Nombre)</span>
+                                <div class="persona-datos">
+                                    <a asp-action="Detalle" asp-route-id="@p.Id" class="enlace-fuerte">@Presentacion.Nombre(p.Nombre)</a>
+                                    <span class="chip chip-canal" style="width: fit-content; margin-top: .2rem">
+                                        <svg class="ico" aria-hidden="true"><use href="@(p.Canal == "TELEGRAM" ? "#i-enviar" : "#i-globo")" /></svg>@Etiquetas.TextoCanal(p.Canal)
+                                    </span>
+                                </div>
+                            </div>
                         </td>
-                        <td><a href="tel:@p.Telefono">@p.Telefono</a></td>
-                        <td>@p.ServicioInteres</td>
-                        <td><span class="@Etiquetas.ClaseCalificacion(p.Calificacion)">@Etiquetas.TextoCalificacion(p.Calificacion) · @p.Puntaje</span></td>
-                        <td><span class="@Etiquetas.ClaseEtapa(p.Etapa)">@Etiquetas.TextoEtapa(p.Etapa)</span></td>
-                        <td>@Etiquetas.FechaHora(p.CreadoEn)</td>
-                        <td><a asp-action="Detalle" asp-route-id="@p.Id" class="boton boton-claro boton-chico">Ver</a></td>
+                        <td data-etiqueta="Teléfono"><a href="tel:@p.Telefono" class="telefono">@p.Telefono</a></td>
+                        <td data-etiqueta="Servicio">@p.ServicioInteres</td>
+                        <td data-etiqueta="Calificación"><span class="@Etiquetas.ClaseCalificacion(p.Calificacion)">@Etiquetas.TextoCalificacion(p.Calificacion) · @p.Puntaje</span></td>
+                        <td data-etiqueta="Etapa"><span class="@Etiquetas.ClaseEtapa(p.Etapa)">@Etiquetas.TextoEtapa(p.Etapa)</span></td>
+                        <td data-etiqueta="Registrado">@Etiquetas.FechaHora(p.CreadoEn)</td>
+                        <td class="celda-accion"><a asp-action="Detalle" asp-route-id="@p.Id" class="boton boton-claro boton-chico">Ver</a></td>
                     </tr>
                 }
             </tbody>
